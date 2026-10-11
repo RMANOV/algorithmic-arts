@@ -13,6 +13,26 @@ python spectral_geometry.py --selftest # headless render test, no screen needed
 
 ---
 
+## Self-Replicator Observatory
+
+An interactive artificial ecology in the same dark, luminous canvas style. **One standalone Python file; no pip dependencies, no server, no network.** Adjust finite resources, replenishment, replication cost, mutation, competition and decision rules. Watch three lineages compete, inspect an agent's reasoning, then compare repeated seeded trials.
+
+```bash
+python self_replicator.py
+python self_replicator.py --selftest
+python self_replicator.py --headless --steps 600 --trials 5 --output experiment.json
+```
+
+![Self-Replicator Observatory](assets/self-replicator.png)
+
+**World** shows agents, resource patches and population/resource trajectories. **Mechanisms** draws eight visual explanations: architecture, finite energy, replication, mutation, competition, self-modification, evolution and pre-mind decision logic. Diagrams use observed events when available and label illustrative examples. **Compare** reports means, observed ranges and survival across multiple seeds.
+
+**Controls:** `Space` — pause/play · `N` — one tick · `R` — apply settings and restart · click a hexagon — inspect · `←` / `→` — mechanism diagram · `Esc` — cancel comparison. Sidebar changes are pending until **New run**; comparisons use the current sidebar settings. JSON retains trial settings/results; CSV exports the live trajectory.
+
+Python ≥ 3.10; the desktop interface uses `tkinter` (some Linux Python installations supply it as an OS package). Headless mode and selftests work without Tk. [Model, visual guide and reproducible experiments →](docs/self_replicator.md)
+
+---
+
 ## Gallery
 
 | | |
@@ -36,6 +56,9 @@ Because constraints are the art. Every scene here is:
 
 ```
 spectral_geometry.py     # the current piece: 8 scenes, windowed, selftest
+self_replicator.py       # interactive ecology, visual explanations, comparisons
+docs/self_replicator.md  # model assumptions, controls, experiments
+tests/                  # optional native Tk interface smoke tests
 series/                  # the evolution: 01→09, fullscreen tkinter experiments
 assets/                  # GIF/poster previews + the headless renderer that made them
 ```
