@@ -41,7 +41,8 @@ ACTIONS = ("FORAGE", "REPRODUCE", "FLEE", "FIGHT", "FREEZE", "REST")
 COLS, ROWS = 24, 16
 MAX_AGENTS = 360  # computational guard, not an ecological carrying capacity
 SENSOR_RADIUS = 2.2
-MODEL_VERSION = "1.1"
+DISTANCE_TIE_TOLERANCE = 1e-12
+MODEL_VERSION = "1.2"
 
 
 def clamp(value, low, high):
@@ -263,7 +264,9 @@ class World:
         nearest = None
         if neighbors:
             distance = min(distance for distance, _ in neighbors)
-            tied = [entry for entry in neighbors if entry[0] == distance]
+            tied = [entry for entry in neighbors
+                    if math.isclose(entry[0], distance, rel_tol=0.0,
+                                    abs_tol=DISTANCE_TIE_TOLERANCE)]
             nearest = tied[0] if len(tied) == 1 else self.tie_rng.choice(tied)
         enemy = nearest[1] if nearest else None
         strength = (a.energy + 2) / (enemy.energy + 2) if enemy else 1.0
@@ -316,9 +319,11 @@ class World:
     def _fight(self, a, enemy, pairs):
         pair = tuple(sorted((a.uid, enemy.uid)))
         distance = math.hypot(delta(a.x, enemy.x, COLS), delta(a.y, enemy.y, ROWS))
-        if distance >= 0.9 or pair in pairs or self.rng.random() >= 0.35 * self.cfg.competition:
+        if distance >= 0.9 or pair in pairs:
             return
         pairs.add(pair)
+        if self.rng.random() >= 0.35 * self.cfg.competition:
+            return
         chance = (a.energy + 2) / (a.energy + enemy.energy + 4)
         winner, loser = (a, enemy) if self.rng.random() < chance else (enemy, a)
         injury_a = self.spend(a, 0.8 + self.rng.random() * 0.6)
