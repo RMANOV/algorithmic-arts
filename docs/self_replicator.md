@@ -63,7 +63,7 @@ Changing a setting does not silently alter an ongoing live run. Press **New run 
 
 **World** supports a population or resource-stock chart. **Compare** offers 3, 5 or 10 trials, each 300, 600 or 1200 ticks, using consecutive seeds from the starting seed. It reports final population mean, observed min–max, count of trials with survivors, and mean births, plus mean population trajectories. These are descriptive summaries; the ranges are not confidence intervals. Extinction is retained in the results.
 
-**JSON export** includes exact configs, seeds, model version, sampled trajectories, birth/death counts, risk means, mutation/adaptation counts, the energy ledger, latest events and cumulative action counts for the live run and every completed comparison trial. **CSV export** includes the live trajectory with its seed and complete config on every row. **Load settings** reads either format of JSON export or a bare config object, and populates pending controls. It restarts a seeded experiment; it is not a mid-run checkpoint loader.
+**JSON export** includes exact configs, seeds, model version, sampled trajectories, birth/death counts, risk means, mutation/adaptation counts, the energy ledger, latest events and cumulative action counts for the live run and every completed comparison trial. **CSV export** includes the live trajectory with its seed and complete config on every row. **Load settings** reads either format of JSON export or a bare config object, and populates pending controls. It starts from tick zero using the installed model version; it is not a mid-run checkpoint loader. Model 1.1 corrects neighbor coverage and opponent ties, so loading 1.0 settings does not reproduce the old trajectory.
 
 The chart history initially samples every 5 ticks. After 2,000 samples it progressively decimates, retaining the origin; exports always append the exact current endpoint. Tick indices are included, so an exported long run does not imply uniform original sampling.
 
@@ -83,7 +83,7 @@ Each fixed tick:
 6. Remove dead agents; add children, which first act on the following tick.
 7. Record the trajectory on the current sampling schedule.
 
-Sensing uses current positions/energy as sequential turns execute, not a simultaneous global optimization. Nearby candidate lookup uses spatial buckets. A fight is attempted at most once per unordered pair per tick. Maximum lifespan is 1,400 ticks; residual energy at that age is dissipated. There is no corpse recycling.
+Sensing uses current positions/energy as sequential turns execute, not a simultaneous global optimization. Nearby candidate lookup uses spatial buckets covering the full 2.2-unit radius. Exactly equidistant nearest opponents are selected uniformly with a separate seeded generator, rather than by ID; these choices do not consume combat/mutation random draws. Terrain also has its own generator. Equal seeds match the initial environment; interventions can still change the order and number of later stochastic events. A fight is attempted at most once per unordered pair per tick. Maximum lifespan is 1,400 ticks; residual energy at that age is dissipated. There is no corpse recycling.
 
 ### Genome and heredity
 
@@ -120,7 +120,7 @@ The six actions are **FORAGE, REPRODUCE, FLEE, FIGHT, FREEZE, REST**.
 
 **Reflex:** threshold = `0.18 + 0.48 × expressed risk`. At or above threshold, a sufficiently bold and relatively strong agent fights. Otherwise it flees if a lower-pressure route exists, fights if trapped but stronger, or freezes. Below threshold it reproduces if eligible, otherwise forages if food is available, otherwise rests.
 
-**Utility:** eligible actions receive explicit heuristic scores. They combine expected food, energy reserve, danger, risk preference and relative strength. Ineligible actions are absent from the score table. `decide()` contains the complete equations; the decision diagram shows the actual signed score for every eligible action. Scores are engineering choices in arbitrary utility units, not calibrated survival probabilities.
+**Utility:** eligible actions receive explicit heuristic scores. They combine food at a neighboring target, energy reserve, danger, risk preference and relative strength. Movement may not reach that target's cell this tick, so a favorable forage score can still produce no food and an energy loss. Ineligible actions are absent from the score table. `decide()` contains the complete equations; the decision diagram shows the actual signed score for every eligible action. Scores are engineering choices in arbitrary utility units, not predicted energy yields or calibrated survival probabilities.
 
 **Hybrid:** danger ≥ 0.65 invokes the survival reflex, with open escape prioritized. Otherwise it uses Utility. All lineages use the chosen controller; their genes and Adaptive's acquired offset affect its choices.
 
@@ -128,11 +128,13 @@ The six actions are **FORAGE, REPRODUCE, FLEE, FIGHT, FREEZE, REST**.
 
 Every 40 ticks of its own age, an Adaptive agent with at least 1 energy considers a risk adjustment. Recent injury lowers its offset by 0.08; otherwise an energy drop of more than 1 since its prior checkpoint raises the offset by 0.08. The offset remains between −0.25 and +0.25. Each effective change costs 0.35 energy. Expressed risk is inherited risk plus offset, clipped to 0.05–0.95. Offspring reset the offset to zero.
 
+The feedback uses total stored energy. Construction costs and sharing energy with a successful offspring can therefore trigger the falling-energy response, even without failed foraging. It does not isolate ecological failure from planned reproduction.
+
 This is deliberate **parameter-level self-modification**. It provides a clean distinction between an inherited description and acquired behavior. It is not arbitrary source-code rewriting, an optimizer, or evidence that the agent has a mind. A reactive adjustment can be counterproductive; Adaptive is not guaranteed to win.
 
 ### Computational bounds and interpretation
 
-The maximum population is 360. A visible warning and exported `cap_hits` report when reproduction was blocked by this computational guard. Treat such results as capped experiments, not a discovered carrying capacity. The model has no chemical machinery, sexual reproduction, species formation, general intelligence, or calibrated biological timescale. Selection here operates on a small engineered parameter space and fixed policy families.
+The maximum population is 360. A visible warning and exported `cap_hits` count energy-ready agent turns while this computational guard has no room. An agent may still prefer fleeing or fighting, so this is not a count of actual denied births. Treat such results as capped experiments, not a discovered carrying capacity. Spatial buckets and cached pressure coordinates reduce typical work, but a concentrated population still has quadratic neighbor work; a slow individual tick can exceed the GUI's frame budget. The model has no chemical machinery, sexual reproduction, species formation, general intelligence, or calibrated biological timescale. Selection here operates on a small engineered parameter space and fixed policy families.
 
 ## Five useful experiments
 
@@ -158,10 +160,10 @@ python self_replicator.py --headless --seed 42 --steps 600 --trials 5 --output e
 # Load the precise configuration from a prior export and use a new seed set:
 python self_replicator.py --headless --config experiment.json --seed 100 --output repeat.json
 
-# Optional native interface tests; skipped cleanly when a display is unavailable:
+# Regressions and native interface tests; only native tests skip without a display:
 python -m unittest discover -s tests -v
 ```
 
-The built-in suite checks deterministic replay and rendering independence, energy conservation, lineage accounting, extinction under an empty budget, replenishment bounds, energy-conserving births, non-inheritance of acquired changes, mutation/no-mutation behavior, action eligibility, combat disabled at zero competition, periodic geometry, cap signaling, trajectory retention, export/reload, summary statistics and diagram geometry. Native Tk tests exercise setting application, playback, stepping, agent selection, all eight diagrams at the minimum window size, pooled item reuse, comparison freeze/cancel/completion, export/reload and the scheduled event loop.
+The built-in suite checks deterministic replay and rendering independence, energy conservation, lineage accounting, extinction under an empty budget, replenishment bounds, energy-conserving births, non-inheritance of acquired changes, mutation/no-mutation behavior, action eligibility, combat disabled at zero competition, periodic geometry, cap signaling, trajectory retention, export/reload, summary statistics and diagram geometry. Independent regressions compare indexed neighbors and escape geometry against full torus oracles, check ID-renaming invariance and seeded tie choices, and exercise numeric validation through the constructor and CLI. Native Tk tests exercise setting application, playback, stepping, agent selection, all eight diagrams at the minimum window size, pooled item reuse, comparison freeze/cancel/completion, export/reload and the scheduled event loop.
 
 The baseline integration was validated on Python 3.12 with Tk 9 under a virtual X display. Windows and macOS native rendering have not been exercised in that environment.

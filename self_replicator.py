@@ -40,7 +40,8 @@ RULES = ("Reflex", "Utility", "Hybrid")
 ACTIONS = ("FORAGE", "REPRODUCE", "FLEE", "FIGHT", "FREEZE", "REST")
 COLS, ROWS = 24, 16
 MAX_AGENTS = 360  # computational guard, not an ecological carrying capacity
-MODEL_VERSION = "1.0"
+SENSOR_RADIUS = 2.2
+MODEL_VERSION = "1.1"
 
 
 def clamp(value, low, high):
@@ -70,11 +71,12 @@ class Config:
                   "competition": (0, 1), "founders": (1, 40)}
         for name, (low, high) in limits.items():
             value = getattr(self, name)
-            if not isinstance(value, (int, float)) or not math.isfinite(value) or not low <= value <= high:
+            if (isinstance(value, bool) or not isinstance(value, (int, float))
+                    or not low <= value <= high or not math.isfinite(value)):
                 raise ValueError(f"{name} must be in [{low}, {high}]")
         if self.rule not in RULES:
             raise ValueError(f"rule must be one of {RULES}")
-        if not isinstance(self.seed, int) or not 0 <= self.seed <= 2**32 - 1:
+        if isinstance(self.seed, bool) or not isinstance(self.seed, int) or not 0 <= self.seed <= 2**32 - 1:
             raise ValueError("seed must be an integer from 0 to 4294967295")
         if not isinstance(self.founders, int):
             raise ValueError("founders must be an integer")
@@ -189,6 +191,8 @@ class World:
     def __init__(self, cfg=Config()):
         self.cfg = cfg
         self.rng = random.Random(cfg.seed)
+        # Tie choices must not privilege IDs or shift combat/mutation draws.
+        self.tie_rng = random.Random(cfg.seed ^ 0x544945)
         # Environmental randomness is independent of agent-turn randomness.
         terrain_rng = random.Random(cfg.seed ^ 0x71A5)
         centers = [(terrain_rng.uniform(0, COLS), terrain_rng.uniform(0, ROWS)) for _ in range(9)]
@@ -243,30 +247,39 @@ class World:
     def _neighbors(self, agent, buckets):
         found = []
         ix, iy = int(agent.x), int(agent.y)
-        for dy in range(-2, 3):
-            for dx in range(-2, 3):
+        extent = math.ceil(SENSOR_RADIUS)
+        for dy in range(-extent, extent + 1):
+            for dx in range(-extent, extent + 1):
                 for other in buckets.get(((ix + dx) % COLS, (iy + dy) % ROWS), ()):
                     if other.lineage == agent.lineage or other.energy <= 0:
                         continue
                     distance = math.hypot(delta(agent.x, other.x, COLS), delta(agent.y, other.y, ROWS))
-                    if distance < 2.2:
+                    if distance < SENSOR_RADIUS:
                         found.append((distance, other))
         return found
 
     def _sense(self, a, buckets):
         neighbors = self._neighbors(a, buckets)
-        nearest = min(neighbors, key=lambda x: (x[0], x[1].uid)) if neighbors else None
+        nearest = None
+        if neighbors:
+            distance = min(distance for distance, _ in neighbors)
+            tied = [entry for entry in neighbors if entry[0] == distance]
+            nearest = tied[0] if len(tied) == 1 else self.tie_rng.choice(tied)
         enemy = nearest[1] if nearest else None
         strength = (a.energy + 2) / (enemy.energy + 2) if enemy else 1.0
-        danger = (self.cfg.competition * (1 - nearest[0] / 2.2) *
+        danger = (self.cfg.competition * (1 - nearest[0] / SENSOR_RADIUS) *
                   min(1.5, 1 / strength)) if nearest else 0.0
-        # Empty neighboring cell = a feasible escape route, even on a torus.
-        options = [(a.x + dx, a.y + dy) for dy in (-1, 0, 1) for dx in (-1, 0, 1)]
-        def pressure(pos):
-            return sum(max(0, 1.5 - math.hypot(delta(pos[0], o.x, COLS),
-                                               delta(pos[1], o.y, ROWS))) for _, o in neighbors)
-        escape_target = min(options, key=pressure)
-        escape = bool(enemy) and pressure(escape_target) < pressure((a.x, a.y)) - 0.05
+        # Escape means lower sensed enemy pressure, not an empty destination.
+        offsets = [(dx, dy) for dy in (-1, 0, 1) for dx in (-1, 0, 1)]
+        options = [(a.x + dx, a.y + dy) for dx, dy in offsets]
+        relative = [(delta(a.x, other.x, COLS), delta(a.y, other.y, ROWS))
+                    for _, other in neighbors]
+        # Sensed offsets plus a one-cell move remain below half either period.
+        pressures = [sum(max(0, 1.5 - math.hypot(x - dx, y - dy))
+                         for x, y in relative) for dx, dy in offsets]
+        escape_index = min(range(len(options)), key=pressures.__getitem__)
+        escape_target = options[escape_index]
+        escape = bool(enemy) and pressures[escape_index] < pressures[4] - 0.05
         target = max(options, key=lambda p: self.food[self.cell(*p)])
         food = self.food[self.cell(*target)]
         return enemy, min(1, danger), strength, escape, escape_target, target, food
@@ -551,7 +564,7 @@ def draw_chart(ink, rows, box, title="Population trajectories", resource=False):
         ink.text(left - 9, gy, f"{ymax * (3-part)/3:.0f}", 11, MUTED, anchor="e")
     for i in range(1 if resource else 3):
         points = []
-        # Bound drawing work while retaining the complete numerical export.
+        # Bound drawing work; exports retain the sampled/decimated history.
         stride = max(1, len(rows) // 450)
         selected = rows[::stride]
         if selected[-1] is not rows[-1]:
@@ -650,7 +663,7 @@ class ObservatoryView:
         if not world.agents:
             p.text(ax+aw/2, ay+ah/2, "EXTINCTION", 28, TEXT, anchor="center", bold=True)
         if world.cap_hits:
-            p.text(22, chart_y-8, f"COMPUTATIONAL CAP REACHED: {MAX_AGENTS} agents. Births were blocked; interpret this run cautiously.", 11, AMBER, width=w-44, anchor="sw")
+            p.text(22, chart_y-8, f"COMPUTATIONAL CAP {MAX_AGENTS}: {world.cap_hits} energy-ready turns at the limit. Outcomes may be capped.", 11, AMBER, width=w-44, anchor="sw")
         draw_chart(p, world.samples(), (22, chart_y, w-44, 218),
                    "Available resource stock" if resource_chart else "Population trajectories", resource_chart)
 
@@ -782,7 +795,7 @@ class ObservatoryView:
             stimulus = event["stimulus"] if event else "recent injury"
             p.text(42, y+340, f"Trigger: {stimulus}   |   adjustment costs 0.35 energy", 14, PINK)
             self.note(w, h, "A small controller edits its own parameter.",
-                      "Only Adaptive agents adjust expressed risk every 40 ticks: injury lowers it, falling energy without injury raises it. Offset is bounded to ±0.25, costs energy, and is NOT inherited. This is parameter adaptation, not source-code rewriting.")
+                      "Adaptive checks risk every 40 ticks: injury lowers it; otherwise an energy drop, including reproduction, raises it. Its acquired offset stays within ±0.25; effective changes cost 0.35 and are NOT inherited. This is parameter adjustment, not code rewriting.")
         elif index == 6:
             p.text(32, y, "SURVIVOR DISTRIBUTION / inherited risk", 14, MUTED)
             left, top, cw, ch = 60, y+58, w-100, min(234, h*.33)
@@ -846,7 +859,7 @@ class ObservatoryView:
                     p.text(w*.5, y+305, trace.action, 32, CYAN, anchor="center", bold=True)
                     p.text(42, y+349, trace.reason, 14, width=w-84)
             self.note(w, h, "Sense → evaluate → act → pay costs → repeat",
-                      "Reflex uses ordered thresholds. Utility ranks explicitly chosen heuristic gains and costs. Hybrid gives extreme danger a survival reflex, otherwise uses scores. These are inspectable engineered rules, not evidence of subjective experience.")
+                      "Reflex uses thresholds; Utility ranks heuristic scores; Hybrid switches at extreme danger. Food is sensed at a target that movement may not reach this tick. Scores are preferences, not predicted energy gains or survival probabilities.")
 
     def note(self, w, h, title, body):
         p = self.p

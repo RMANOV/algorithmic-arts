@@ -58,7 +58,7 @@ Because constraints are the art. Every scene here is:
 spectral_geometry.py     # the current piece: 8 scenes, windowed, selftest
 self_replicator.py       # interactive ecology, visual explanations, comparisons
 docs/self_replicator.md  # model assumptions, controls, experiments
-tests/                  # optional native Tk interface smoke tests
+tests/                  # model regressions and optional native Tk smoke tests
 series/                  # the evolution: 01→09, fullscreen tkinter experiments
 assets/                  # GIF/poster previews + the headless renderer that made them
 ```
