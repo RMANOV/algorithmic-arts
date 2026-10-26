@@ -16,7 +16,7 @@ METHODS = ('Reflex', 'Utility', 'UCB', 'Q-learning', 'Opponent', 'Lookahead')
 ACTIONS = ('MINE', 'BUILD', 'ATTACK', 'RETREAT', 'GUARD', 'FLANK', 'RAID', 'ESCORT')
 MODES = ('Nugget rush', 'Scarcity', 'Moving seams', 'Siege', 'Tempest', 'Arms race')
 HAZARD_KINDS = ('ice','flash','worm','mountain','river','alien','relic')
-MODEL_VERSION = 'CHITIN 2.0 — Predatory ecology'
+MODEL_VERSION = 'CHITIN 2.0.1 — Lifetime and forecast validation'
 BIRTH_MERIT = 3.5
 FOOD_CAPACITY = 240.0
 BODY_METAL = 6.0
@@ -432,6 +432,7 @@ class BattleWorld:
         return scores,'3-step rollout · exposure + reachable ore − cost'
 
     def _choose(self,a,s):
+        if self.forecaster: self.forecaster.before_decision(a)
         a.forecast={}
         f=self.factions[a.faction]; scores=self._utility(a,s)
         method=f.method
@@ -492,11 +493,15 @@ class BattleWorld:
         if self.command: a.trace['command']=self.command.status(a)
         if method=='Lookahead' and a.forecast:
             a.trace['forecast']=dict(a.forecast)
-            if self.forecaster: self.forecaster.record(a,a.forecast)
         a.next_decision=self.tick+8+self.rng.randrange(5)
         f.decisions+=1; self.stats['decisions']+=1
         a.decision_id=self.stats['decisions']
         f.decisions_by_action[a.action]=f.decisions_by_action.get(a.action,0)+1
+        if self.forecaster:
+            self.forecaster.note_decision(a)
+            if method=='Lookahead' and a.forecast:
+                self.forecaster.record(a,a.forecast)
+                self.forecaster.record_validation(a,a.forecast)
         for e in s['enemies']:
             # Many teammates seeing one decision is one observation, not many
             # independent confirmations of predictability.
@@ -694,6 +699,7 @@ class BattleWorld:
 
     def _die(self,a):
         if a.uid not in self._alive: return
+        if self.forecaster: self.forecaster.observe_death(a)
         self._update(a,{'state':a.state},True)
         if not a.child_paid: self._resolve_birth(a,False)
         # Scrap is recoverable; nearest ore node has no capacity clipping.
@@ -1418,10 +1424,12 @@ def predictive_target(world, a, sensed, action, default):
             candidate=(node.x,node.y)
             if _announced_flash_risk(world,a,candidate)==0:return candidate
     enemy = sensed.get('enemy')
+    if action == 'RAID':
+        enemy = sensed.get('raid_target') or enemy
     if enemy is None or action not in ('ATTACK', 'FLANK', 'RAID'):
         return default
     if action == 'RAID' and default and math.hypot(default[0]-enemy.x, default[1]-enemy.y) > 3:
-        return default  # The richest raid target can differ from nearest enemy.
+        return default  # Preserve a frozen goal distinct from the observed contact.
     distance = math.hypot(a.x-enemy.x, a.y-enemy.y)
     if distance < 2.5 or enemy.action == 'BUILD':
         return default
@@ -1476,6 +1484,123 @@ def _forecast_encounter(a,enemy,own_rate,enemy_rate,duration,reaction,
     return damage[0],damage[1],costs[0],stolen[0],stolen[1],health[1]<=0,health[0]<=0
 
 
+def _forecast_lifetime(a, enemy, action, food_path, distance, speed, contact,
+                       reaction, own_rate, enemy_rate, ore_available=0.):
+    """One bounded candidate trajectory, starting after current metabolism.
+
+    The current action runs first. Short validation points are taken after a
+    future tick's metabolism/repair but before its action; displayed long points
+    are taken after that action. This is a deterministic local approximation,
+    not World.step: terrain, other agents and future replanning are not simulated.
+    Expected combat stays capped at 60 contact ticks. Death stops every yield
+    and expenditure, without discarding benefits already obtained while alive.
+    """
+    horizons = (30, 90, 180)
+    short = (1, 8, 9, 10, 11, 12)
+    # An opponent beyond every projected contact cannot affect this candidate.
+    # Do not simulate its maintenance or healing on all 180 ticks.
+    enemy = enemy if enemy is not None and contact <= horizons[-1] else None
+    health = [max(0., a.health), max(0., enemy.health) if enemy else 0.]
+    energy = [max(0., a.energy), max(0., enemy.energy) if enemy else 0.]
+    hunters = (a.trophic == 'hunter', bool(enemy and enemy.trophic == 'hunter'))
+    actions = (action, enemy.action if enemy else 'RETREAT')
+    basal_costs = tuple(.16 if hunter else .10 for hunter in hunters)
+    intake_rates = tuple(.22 if item in ('MINE', 'GUARD') else .17 for item in actions)
+    can_repair = tuple(item in ('MINE', 'GUARD') for item in actions)
+    rates = (own_rate, enemy_rate)
+    totals = dict(ore=0., spent=0., dealt=0., received=0., stolen=0.,
+                  enemy_stolen=0., kill=0., hunger_damage=0., construction=0.)
+    remaining = max(0., distance)
+    base_speed = speed / (.65 if a.energy < 20 else 1.)
+    ore_limit = max(0., min(ore_available, 15.-a.metal))
+    # Preserve the original integrated food estimates while sharing one path
+    # across every horizon, instead of restarting a dead candidate at each one.
+    access = (clamp(food_path[30], 0., 1.),
+              clamp((90*food_path[90]-30*food_path[30])/60, 0., 1.),
+              clamp((180*food_path[180]-90*food_path[90])/90, 0., 1.))
+    points, validation = {}, {}
+
+    def spend(who, requested):
+        paid = min(energy[who], max(0., requested))
+        energy[who] -= paid
+        if who == 0:
+            totals['spent'] += paid
+        return paid
+
+    def state():
+        return {**totals, 'energy': energy[0] if health[0] > 0 else 0.,
+                'health': max(0., health[0])}
+
+    def metabolism(who, tick):
+        if health[who] <= 0:
+            return
+        if not hunters[who]:
+            food = access[0 if tick <= 30 else 1 if tick <= 90 else 2]
+            intake = intake_rates[who]*food
+            energy[who] += min(max(0., 100.-energy[who]), intake)
+        paid = min(energy[who], basal_costs[who])
+        energy[who] -= paid
+        if who == 0:
+            totals['spent'] += paid
+        if energy[who] < .05:
+            health[who] -= .22
+            if who == 0:
+                totals['hunger_damage'] += .22
+        if 0 < health[who] < 70 and can_repair[who] and energy[who] > 15:
+            repair = min(.045, 70.-health[who])
+            health[who] += repair
+            spend(who, repair*.3)
+
+    def strike(who):
+        other = 1-who
+        if health[who] <= 0 or health[other] <= 0 or rates[who] <= 0 or energy[who] < .7:
+            return
+        spend(who, .7*.22)
+        hit = min(health[other], rates[who])
+        health[other] -= hit
+        totals['dealt' if who == 0 else 'received'] += hit
+        if hunters[who]:
+            taken = min(energy[other], hit*.9, max(0., (100.-energy[who])/.8))
+            energy[other] -= taken
+            energy[who] += taken*.8
+            totals['stolen' if who == 0 else 'enemy_stolen'] += taken
+        if who == 0 and health[other] <= 0:
+            totals['kill'] = 1.
+
+    for tick in range(181):
+        if tick:
+            metabolism(0, tick)
+            if health[1] > 0:
+                metabolism(1, tick)
+        if tick in short:
+            validation[tick] = state()
+        if health[0] > 0:
+            if action == 'BUILD' and tick == 0:
+                paid = spend(0, 12.)
+                totals['construction'] = paid
+                energy[0] *= .55  # The other 45% is transferred, not dissipated.
+            elif action != 'BUILD' and remaining >= .2:
+                moved = min(remaining, base_speed*(.65 if energy[0] < 20 else 1.))
+                remaining -= moved
+                spend(0, moved*.055)
+            if action == 'MINE' and remaining < 1.35:
+                totals['ore'] += min(.55, max(0., ore_limit-totals['ore']))
+            if enemy and contact <= tick < contact+60:
+                for who in ((0, 1) if tick % 2 == 0 else (1, 0)):
+                    if who == 0 or tick-contact >= reaction:
+                        strike(who)
+        if tick in horizons:
+            points[tick] = state()
+        if health[0] <= 0:
+            # No future metabolism, mining, transfers or repairs after death.
+            for horizon in horizons:
+                points.setdefault(horizon, state())
+            for horizon in short:
+                validation.setdefault(horizon, state())
+            break
+    return {'points': points, 'validation': validation}
+
+
 def predictive_scores(world, a, sensed, utility):
     """Bounded receding-horizon correction to the robust local utility.
 
@@ -1507,10 +1632,10 @@ def predictive_scores(world, a, sensed, utility):
     support = max(0., sensed.get('support', 0.))
     pressure = max(0., sensed.get('pressure', 0.))
     eligible = world.eligible_indices(a, sensed)
-    scores = list(utility); candidates = {}
+    scores = list(utility); candidates = {}; validation_candidates = {}
     ledger=getattr(world,'forecaster',None)
-    observations=ledger.count if ledger else 0
-    error=ledger.error_sum/observations if observations else None
+    observations=ledger.validation_count if ledger else 0
+    error=ledger.validation_error_sum/observations if observations else None
     # Sparse evidence earns little authority. Observed forecast error reduces
     # future influence continuously; no free reward is granted for predictions.
     trust=.25 if observations<6 else clamp(1./(1.+error/12.),.12,.75)
@@ -1524,7 +1649,6 @@ def predictive_scores(world, a, sensed, utility):
         speed = (.29 if hunter else .23)*a.speed*(1.35 if action in ('RETREAT','RAID') else 1)
         if action=='GUARD': speed*=.5
         if a.energy<20: speed*=.65
-        travel = distance/max(speed,.05)
         enemy_distance = math.hypot(a.x-enemy.x,a.y-enemy.y) if enemy else 1000.
         chasing = action in attack_actions
         defensive = action in ('GUARD','ESCORT')
@@ -1541,76 +1665,39 @@ def predictive_scores(world, a, sensed, utility):
         local_evidence=bool(enemy and enemy_distance<6 and
             (enemy.health<18 or pressure>support+1.5 or (hunter and .7<a.energy<20)))
         authority=max(trust,.7 if local_evidence else 0.)
-        points=[]; value=0.; projected_dead=False
+        own_rate=enemy_rate=0.; reaction=0.
+        if enemy:
+            own_rate=.22*(4.8 if hunter else 3.6)*a.damage/(enemy.armor*(1.55 if enemy.action in ('GUARD','ESCORT') else 1.)) if chasing or defensive else 0.
+            reaction=0. if enemy.action in attack_actions+('GUARD','ESCORT') else 5.
+            enemy_rate=.22*(4.8 if enemy.trophic=='hunter' else 3.6)*enemy.damage/a.armor
+            enemy_rate*=(1+min(2.,pressure)*.18)/(1+support*.35)
+            if defensive: enemy_rate/=1.55
+            if action=='FLANK': enemy_rate*=.85
+            if action=='RETREAT': enemy_rate*=.20
+        ore_available=0.
+        if action=='MINE' and target and world.nodes:
+            node=min(world.nodes,key=lambda n:math.hypot(n.x-target[0],n.y-target[1]))
+            if math.hypot(node.x-target[0],node.y-target[1])<=1.35:
+                ore_available=node.amount
+        trajectory=_forecast_lifetime(a,enemy,action,food_path,distance,speed,
+                                      contact,reaction,own_rate,enemy_rate,ore_available)
+        validation_candidates[action]=[
+            {'ticks':horizon,'energy':round(point['energy'],3),'health':round(point['health'],3)}
+            for horizon,point in sorted(trajectory['validation'].items())]
+        points=[]; value=0.
         for horizon,weight in zip(FORECAST_HORIZONS,(.50,.32,.18)):
-            energy_start=(a.energy-12)*.55 if action=='BUILD' else a.energy
-            intake=(.22 if action in ('MINE','GUARD') else .17)*food_path[horizon] if not hunter else 0.
-            move_cost=min(horizon,travel)*speed*.055
-            maintenance=basal*horizon
-            energy=energy_start+(intake-basal)*horizon-move_cost
-            health=a.health
-            energy_at_contact=energy_start+(intake-basal)*min(contact,horizon)-min(contact,travel,horizon)*speed*.055
-            dealt=received=stolen=kill=0.; attack_cost=0.
-            fight_time=max(0.,horizon-contact)
-            can_strike=(chasing or defensive) and energy_at_contact>=.7
-            if enemy and fight_time:
-                own_rate=.22*(4.8 if hunter else 3.6)*a.damage/(enemy.armor*(1.55 if enemy.action in ('GUARD','ESCORT') else 1.)) if can_strike else 0.
-                # Passive prey can react at its next decision; no assumption of
-                # permanent helplessness, but no damage from an already dead foe.
-                reaction=0. if enemy.action in attack_actions+('GUARD','ESCORT') else 5.
-                enemy_hunter=getattr(enemy,'trophic','forager')=='hunter'
-                enemy_intake=0. if enemy_hunter else (.22 if enemy.action in ('MINE','GUARD') else .17)*food_path[horizon]
-                enemy_gain=enemy_intake-(.16 if enemy_hunter else .10)
-                enemy_contact_energy=enemy.energy+enemy_gain*min(contact,horizon)
-                enemy_can_strike=enemy_contact_energy>=.7
-                if not enemy_can_strike and enemy_gain>0:
-                    reaction=max(reaction,(.7-enemy_contact_energy)/enemy_gain)
-                    enemy_can_strike=reaction<fight_time
-                # An empty hunter cannot manufacture its first bite; a forager
-                # may recover that cost through actual expected food intake.
-                enemy_rate=.22*(4.8 if enemy_hunter else 3.6)*enemy.damage/a.armor if enemy_can_strike else 0.
-                enemy_rate*=(1+min(2.,pressure)*.18)/(1+support*.35)
-                if defensive: enemy_rate/=1.55
-                if action=='FLANK': enemy_rate*=.85
-                if action=='RETREAT': enemy_rate*=.20
-                # Budget every expected strike from actual energy remaining
-                # after previous costs and capped transfers, on both sides.
-                dealt,received,attack_cost,stolen,enemy_stolen,killed,dead = _forecast_encounter(
-                    a,enemy,own_rate,enemy_rate,min(60.,fight_time),reaction,
-                    energy_at_contact,enemy_contact_energy,intake-basal,enemy_gain,hunter,enemy_hunter)
-                energy+=stolen*.8-enemy_stolen-attack_cost;health-=received
-                if dead or health<=0:projected_dead=True
-                kill=float(killed)
-            repair=0.
-            if not projected_dead and health>0 and action in ('MINE','GUARD') and energy>15:
-                repair=min(.045*horizon,max(0.,70-health));health+=repair;energy-=repair*.3
-            # Starvation depends on time below zero, not an arbitrary energy
-            # penalty. This makes waiting costly when hunting is the only food.
-            deficit=max(0.,-energy)
-            net_drain=max(.02,basal-intake+move_cost/max(1,horizon))
-            hunger_ticks=min(float(horizon),deficit/net_drain)
-            hunger_damage=.22*hunger_ticks
-            health-=hunger_damage
-            if health<=0:projected_dead=True
-            # Death is absorbing across the candidate's later horizons. Neither
-            # delayed repair nor a later favorable food average can revive it.
-            projected_energy=0. if projected_dead else clamp(energy,0.,100.)
-            projected_health=0. if projected_dead else clamp(health,0.,70.)
-            ore=0.;node=sensed.get('food')
-            if action=='MINE' and target and world.nodes:
-                node=min(world.nodes,key=lambda n:math.hypot(n.x-target[0],n.y-target[1]))
-                if math.hypot(node.x-target[0],node.y-target[1])<=1.35:
-                    ore=min(max(0.,node.amount),max(0.,15-a.metal),max(0.,horizon-travel)*.55)
+            point=trajectory['points'][horizon]
+            projected_energy,projected_health=point['energy'],point['health']
             # Same currency as observed feedback; transferred child energy is
-            # not dissipated energy and is never charged a second time.
-            point_value=ore*.09+dealt*.065+stolen*.025+kill*.5-received*.10
-            point_value-=.03*(maintenance+move_cost+attack_cost+repair*.3)
-            point_value-=hunger_damage*.10
+            # not dissipated energy. Every cumulative amount stops at death.
+            point_value=(point['ore']*.09+point['dealt']*.065+point['stolen']*.025+
+                         point['kill']*.5-point['received']*.10-point['spent']*.03-
+                         point['hunger_damage']*.10)
             if action=='BUILD':
+                intake=(.17*food_path[horizon]) if not hunter else 0.
                 child_energy=(a.energy-12)*.45+(intake-basal)*45
                 viable=child_energy>.7 and projected_health>=30 and (hunter or food_path[90]>.35)
                 point_value+=1.1 if viable else -2.5
-                point_value-=12*.03
             if projected_health<15:point_value-=(15-projected_health)*.12
             # Distant forecasts get weaker authority, not false certainty.
             confidence=authority/(1.+horizon/100.)
@@ -1620,18 +1707,21 @@ def predictive_scores(world, a, sensed, utility):
         scores[index]=utility[index]+clamp(value*.45*authority,-2.8,2.8)
         candidates[action]=points
     world.stats['forecast_rollouts']+=len(eligible)*len(FORECAST_HORIZONS)
-    return scores,'30/90/180-tick forecast · calibrated risk / finite combat / viable heirs',{
+    return scores,'30/90/180-tick forecast · short-transition evidence / finite combat / viable heirs',{
         'horizons':list(FORECAST_HORIZONS),'candidates':candidates,
+        'validation_candidates':validation_candidates,
         'food_runway_ticks':round(min(9999.,reserve_ticks),1),
-        'calibration':{'observations':observations,'mean_error':None if error is None else round(error,3),'trust':round(trust,3)},
+        'calibration':{'observations':observations,'mean_error':None if error is None else round(error,3),'trust':round(trust,3),
+                       'basis':'fixed_action_until_next_decision'},
         'assumption':'conditional current action and population; replanning can invalidate it'}
 
 
 class ForecastLedger:
-    """At most one 3-horizon forecast per living planner; bounded outcomes.
+    """Keep long descriptive outcomes separate from held-action validation.
 
-    Forecast errors are reported, not converted into free combat/reproduction
-    points. Predictions stay frozen even when the organism replans.
+    Short points end immediately before the next decision/planning cost. Long
+    points remain observable after interventions, but never set confidence.
+    Each lane retains at most one pending record per organism and 120 outcomes.
     """
     def __init__(self, world):
         self.world = world
@@ -1640,34 +1730,145 @@ class ForecastLedger:
         self.count = 0
         self.error_sum = 0.
         self.terminal = 0
+        self.validation_pending = {}
+        self.validation_outcomes = deque(maxlen=120)
+        self.validation_count = 0
+        self.validation_error_sum = 0.
+        self.validation_censored = 0
+        self.validation_censor_reasons = Counter()
+        self.validation_interventions = Counter()
+
+    def _context(self, a):
+        return (self.world.mode, self.world.level, a.trophic, self.world.episode)
+
+    def _record_base(self, a):
+        return {'tick':self.world.tick, 'action':a.action,
+                'decision_id':a.decision_id,
+                'target':tuple(a.target) if a.target is not None else None,
+                'context':self._context(a), 'interventions':set()}
+
+    def _mark_interventions(self, record, a):
+        if a.decision_id != record['decision_id']:
+            record['interventions'].add('replanned')
+        if a.action != record['action']:
+            record['interventions'].add('action_changed')
+        target = tuple(a.target) if a.target is not None else None
+        if target != record['target']:
+            record['interventions'].add('target_changed')
+        if self._context(a) != record['context']:
+            record['interventions'].add('context_changed')
+
+    def _metadata(self, uid, record, point):
+        return {'uid':uid, 'made_at':record['tick'], 'observed_at':self.world.tick,
+                'decision_id':record['decision_id'], 'action':record['action'],
+                'horizon':point['ticks'], 'context':list(record['context']),
+                'interventions':sorted(record['interventions'])}
+
+    @staticmethod
+    def _errors(point, a, dead):
+        health = 0. if dead else a.health
+        energy_error = None if dead else abs(point['energy']-a.energy)
+        health_error = abs(point['health']-health)
+        error = health_error if dead else (energy_error+health_error)*.5
+        return error, energy_error, health_error
+
+    def _censor_validation(self, uid, reason, dead=False):
+        record = self.validation_pending.pop(uid, None)
+        if record is None: return
+        self.validation_censored += 1
+        self.validation_censor_reasons[reason] += 1
+        self.validation_interventions.update(record['interventions'])
+        self.world.stats['forecast_validations_censored'] += 1
+        self.validation_outcomes.append({**self._metadata(uid, record, record['point']),
+            'status':'censored', 'reason':reason, 'early_death':dead,
+            'energy_error':None, 'health_error':None})
+
+    def _finish_validation(self, uid, a=None, dead=False):
+        record = self.validation_pending.get(uid)
+        if record is None: return
+        if a is not None: self._mark_interventions(record, a)
+        elapsed = self.world.tick-record['tick']
+        horizon = record['point']['ticks']
+        if record['interventions']:
+            self._censor_validation(uid, 'intervention', dead)
+            return
+        if elapsed > horizon or (not dead and elapsed != horizon):
+            self._censor_validation(uid, 'early_decision' if elapsed < horizon else 'late_observation', dead)
+            return
+        self.validation_pending.pop(uid)
+        error, energy_error, health_error = self._errors(record['point'], a, dead)
+        self.validation_count += 1
+        self.validation_error_sum += error
+        self.world.stats['forecast_validations_evaluated'] += 1
+        self.validation_outcomes.append({**self._metadata(uid, record, record['point']),
+            'status':'evaluated', 'early_death':dead,
+            'actual_energy':None if dead else a.energy, 'actual_health':0. if dead else a.health,
+            'energy_error':None if energy_error is None else round(energy_error,3),
+            'health_error':round(health_error,3)})
+
+    def before_decision(self, a):
+        # Called before _choose spends planning energy or replaces the action.
+        self._finish_validation(a.uid, a)
+
+    def observe_death(self, a):
+        # Death is absorbing at the promised short horizon. Keep adverse cases.
+        record = self.pending.get(a.uid)
+        if record is not None: self._mark_interventions(record, a)
+        self._finish_validation(a.uid, a, dead=True)
+
+    def note_decision(self, a):
+        record = self.pending.get(a.uid)
+        if record is not None: self._mark_interventions(record, a)
 
     def reset(self):
         self.world.stats['forecasts_censored'] += sum(len(r['points']) for r in self.pending.values())
+        for uid, record in self.pending.items():
+            for point in record['points']:
+                self.outcomes.append({**self._metadata(uid, record, point),
+                    'status':'censored', 'reason':'epoch_reset', 'early_death':False,
+                    'energy_error':None, 'health_error':None})
         self.pending.clear()
+        for uid in tuple(self.validation_pending):
+            self._censor_validation(uid, 'epoch_reset')
 
     def record(self, a, forecast):
         if a.uid in self.pending or not isinstance(forecast, dict): return
         points = forecast.get('candidates',{}).get(a.action)
         if not points: return
-        self.pending[a.uid] = {'tick':self.world.tick,'action':a.action,
-                              'points':[dict(p) for p in points]}
+        self.pending[a.uid] = {**self._record_base(a), 'points':[dict(p) for p in points]}
         self.world.stats['forecasts_registered'] += 1
 
+    def record_validation(self, a, forecast):
+        if not isinstance(forecast, dict): return
+        points = forecast.get('validation_candidates',{}).get(a.action, ())
+        horizon = 1 if a.action == 'BUILD' else a.next_decision-self.world.tick
+        point = next((p for p in points if p['ticks'] == horizon), None)
+        if point is None: return
+        if a.uid in self.validation_pending:
+            self._censor_validation(a.uid, 'replaced_before_observation')
+        self.validation_pending[a.uid] = {**self._record_base(a), 'point':dict(point)}
+        self.world.stats['forecast_validations_registered'] += 1
+
     def step(self):
+        for uid, record in tuple(self.validation_pending.items()):
+            a = self.world._alive.get(uid)
+            if a is None or a.health <= 0:
+                self._finish_validation(uid, a, dead=True)
+            else:
+                self._mark_interventions(record, a)
+                if self.world.tick >= record['tick']+record['point']['ticks']:
+                    # Never compare a post-action state with a pre-action point.
+                    self._censor_validation(uid, 'missed_decision_boundary')
         for uid, record in tuple(self.pending.items()):
             a = self.world._alive.get(uid)
             dead = a is None or a.health <= 0
+            if a is not None: self._mark_interventions(record, a)
             due = [p for p in record['points'] if dead or self.world.tick >= record['tick']+p['ticks']]
             for p in due:
-                actual_health = 0. if dead else a.health
-                # A corpse no longer has an observable energy state; do not
-                # turn that missing measure into an invented zero error.
-                energy_error = None if dead else abs(p['energy']-a.energy)
-                health_error = abs(p['health']-actual_health)
-                error = health_error if dead else (energy_error+health_error)*.5
+                error, energy_error, health_error = self._errors(p, a, dead)
                 self.count += 1; self.error_sum += error; self.terminal += int(dead)
-                self.outcomes.append({'uid':uid,'made_at':record['tick'],'observed_at':self.world.tick,
-                    'action':record['action'],'horizon':p['ticks'],'early_death':dead,
+                self.outcomes.append({**self._metadata(uid, record, p),
+                    'status':'evaluated', 'early_death':dead,
                     'health_error':round(health_error,3),
                     'energy_error':None if dead else round(energy_error,3)})
                 record['points'].remove(p)
@@ -1678,7 +1879,15 @@ class ForecastLedger:
         return {'pending_agents':len(self.pending),'evaluated':self.count,
                 'mean_absolute_state_error':None if not self.count else round(self.error_sum/self.count,3),
                 'early_death_observations':self.terminal,'horizons':list(FORECAST_HORIZONS),
-                'boundary':'conditional predictions, evaluated despite intervening replans; no perfect oracle'}
+                'validation_pending_agents':len(self.validation_pending),
+                'validation_evaluated':self.validation_count,
+                'validation_censored':self.validation_censored,
+                'validation_censor_reasons':dict(self.validation_censor_reasons),
+                'validation_interventions':dict(self.validation_interventions),
+                'validation_mean_state_error':None if not self.validation_count else round(self.validation_error_sum/self.validation_count,3),
+                'validation_outcomes':list(self.validation_outcomes),
+                'outcomes':list(self.outcomes),
+                'boundary':'Long outcomes are descriptive after flagged interventions; confidence uses only fixed-action short segments before the next decision. Death remains adverse evidence.'}
 
 import argparse
 import json
@@ -2355,6 +2564,7 @@ class BattleApp:
         self.fps, self.last_frame_ms = 0., 0.
         self.target_fps = 20
         self._visible = True
+        self._activity_revision = 0
         self._last = self._fps_start = time.perf_counter()
         self._frames, self._after = 0, None
         self._last_motion = self._last
@@ -2377,6 +2587,7 @@ class BattleApp:
 
     def _visibility(self, event):
         if event.widget is self.root:
+            self._activity_revision += 1
             self._visible = str(event.type) in ('19', 'Map')
             self.credit = 0.
             self._last = time.perf_counter()
@@ -2397,6 +2608,7 @@ class BattleApp:
         key = event.keysym.lower()
         self._motion()
         if key == 'space':
+            self._activity_revision += 1
             self.running = not self.running
             self.credit = 0.
         elif key in ('f', 'f11'):
@@ -2417,9 +2629,11 @@ class BattleApp:
             index = names.index(self.world.mode) if self.world.mode in names else -1
             self.world.set_mode(names[(index+1) % len(names)])
         elif key == 'n':
+            self._activity_revision += 1
             self.world.advance_episode()
             self.focus_uid = None
         elif key == 'r':
+            self._activity_revision += 1
             self.world = BattleWorld(seed=(self.world.seed+1) % (2**32), max_agents=self.world.max_agents,
                                      episode_ticks=self.world.episode_ticks)
             self.focus_uid = None
@@ -2434,6 +2648,7 @@ class BattleApp:
     def export_json(self):
         import json
         from tkinter import filedialog
+        self._activity_revision += 1
         path = filedialog.asksaveasfilename(parent=self.root, title='Export this observed experiment',
                     defaultextension='.json', initialfile=f'chitin-seed-{self.world.seed}-tick-{self.world.tick}.json',
                     filetypes=[('Experiment JSON', '*.json')])
@@ -2447,6 +2662,7 @@ class BattleApp:
             self._notice_until = time.perf_counter()+6
         self._last = time.perf_counter()
         self.credit = 0.
+        self._activity_revision += 1
 
     def draw(self):
         if self.closed:
@@ -2537,6 +2753,7 @@ class SoakRecorder:
         self.samples = deque(maxlen=576)
         self.last_sample = self.last_write = self.start
         self.last_tick = app.world.tick
+        self.activity_revision = app._activity_revision
         self.world_identity = id(app.world)
         self.world_resets = 0
         self.reset_seeds = deque(maxlen=100)
@@ -2553,6 +2770,7 @@ class SoakRecorder:
                      'max_agents': app.world.max_agents,
                      'interpretation': 'Native event-loop test. Completion requires mapped non-iconic advancing simulation; '
                      'sleep/minimized/paused intervals are excluded. CPU is fraction of one logical core. '
+                     'Mixed probe intervals containing pause, visibility, reset or export transitions are conservatively excluded. '
                      'Memory is current process resident/working-set size, not system usage. '
                      'Mapped does not prove the window was unobscured or watched by a person.'}
         # Validate destination before a lengthy run, without truncating old logs.
@@ -2630,7 +2848,9 @@ class SoakRecorder:
             self.reset_seeds.append({'elapsed': now-self.start, 'seed': self.app.world.seed})
         advancing = self.app.world.tick != self.last_tick
         visible = self.app.root.winfo_ismapped() and self.app.root.state() != 'iconic'
-        if 0 < gap < 3 and visible and advancing and self.app.running and not self.app.error:
+        uninterrupted = self.activity_revision == self.app._activity_revision
+        self.activity_revision = self.app._activity_revision
+        if 0 < gap < 3 and uninterrupted and visible and advancing and self.app.running and not self.app.error:
             self.active += gap
         self.last_tick = self.app.world.tick
         rss = self.rss_bytes()

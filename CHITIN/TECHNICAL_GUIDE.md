@@ -48,7 +48,13 @@ Each faction can form a commander, lieutenants and members. Leadership follows m
 
 HUNT, RAID, FORAGE and REGROUP adjust real tactical scores and movement. The same physical rules apply to every decision method. Emergency avoidance remains stronger than command advice. Crowns, chevrons and the restrained C2 lens show actual ranks and links rather than decorative authority.
 
-Lookahead evaluates three horizons (30/90/180 model ticks; about 1.7/5/10 seconds at normal speed), anticipating food runway, engagement costs and reproductive burden. A small real energy cost accompanies planning. Interception uses visible trail displacement with a bounded lead, never the enemy’s private intended destination. RAID candidates reuse a contact selected once during actual sensing; hypothetical planning does not consume either random stream. Long projections trade certainty for scope: other agents can turn, conditions can change and replanning can invalidate an earlier forecast. Frozen predictions are compared with later observations in a bounded ledger. Poor measured calibration (a global bounded ledger, not a calibrated probability for every context) reduces the weight of uncertain projections; reliable local survival cues remain decisive. A visible flash warning can redirect mining toward one of at most eight safer known deposits before the pulse arrives. Early death and censored epoch boundaries remain explicit. Estimated values and observed outcomes are separate.
+Lookahead evaluates three horizons (30/90/180 model ticks; about 1.7/5/10 seconds at normal speed), anticipating food runway, engagement costs and reproductive burden. A small real energy cost accompanies planning. Interception uses visible trail displacement with a bounded lead, never the enemy’s private intended destination. RAID scoring and interception use the same selected contact, including its own trail; distant frozen command coordinates remain frozen. Hypothetical planning consumes neither random stream.
+
+Version 2.0.1 uses a shared, bounded local lifetime trajectory. Death stops all further resource gains and energy expenditure while preserving earlier gains; spending is capped by available energy. Projection starts after the current metabolism and before the current action. Short validation ends before the next decision and its new planning cost; long horizon samples are taken after that horizon's action. These phases are intentionally distinct.
+
+Confidence uses separate fixed-action short-segment observations (normally 8–12 ticks; BUILD 1 tick). The original trust formula and score weights remain unchanged. Long 30/90/180 outcomes are still reported, with intervening replans/action/target/context changes, but their mixed errors no longer drive confidence. Death remains evidence; interrupted contexts and epoch boundaries are explicitly counted as censored. Outcome histories are bounded to 120 entries per lane; aggregate short-error statistics remain global and are not a per-role or per-regime probability calibration. Good short predictions do not establish accurate long predictions. A visible flash warning can redirect mining toward one of at most eight safer known deposits before the pulse arrives.
+
+This remains fixed-action heuristic projection, not branching multi-action planning. Terrain, other organisms' future choices and unannounced hazards are not fully rolled out. No categorical Lookahead victory is promised or used as a correctness criterion.
 
 Smarter decisions can earn greater survival, descendants and command influence. No method receives extra health, damage or fertility merely because it is called predictive. Comparisons measure whether the advantage emerges; there is no guaranteed winner or universal monotonic improvement.
 
@@ -98,6 +104,8 @@ Exports include configuration, model version, learners, recent forecasts, epoch 
 ## The Windows endurance report
 
 `TEST_8_HOURS.cmd` starts a native window and a new JSON file under `reports`. The report records its own source hash, Python/Tk/platform, active time, process CPU, resident/working-set memory, Canvas count, learner contexts, resets, model state and errors. It updates atomically every minute. Existing reports are never silently overwritten.
+
+Version 2.0.1 conservatively excludes an entire probe interval when pause/resume, visibility, manual reset or export-dialog transitions occurred inside it, even if both sampled endpoints are running. This can undercount active fractions near transitions; it cannot turn those paused fractions into endurance success. A run from another source hash does not accept this version.
 
 ```bash
 python battle_evolution.py --max-agents 60 --soak-hours 8 --soak-report reports/new-test.json

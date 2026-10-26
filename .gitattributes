@@ -1,0 +1,2 @@
+# Preserve the exact delivered bytes verified by CHITIN/SHA256SUMS.txt.
+CHITIN/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
