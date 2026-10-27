@@ -1,0 +1,28 @@
+--- all closed epochs: 240 epochs, 30 seeds
+LA score (absolute)                n= 240 mean= -23.59 sd=  9.69 naive± 1.23 seed± 1.33 deff=1.18
+LA-Opp score                       n= 240 mean=  +0.01 sd= 14.74 naive± 1.87 seed± 2.18 deff=1.37
+LA-Utility score                   n= 240 mean=  +1.33 sd= 14.67 naive± 1.86 seed± 1.94 deff=1.10
+Opp-Utility score                  n= 240 mean=  +1.32 sd= 14.19 naive± 1.80 seed± 1.84 deff=1.05
+LA-4 serious score                 n= 240 mean=  +1.54 sd= 10.95 naive± 1.38 seed± 1.61 deff=1.36
+LA-Opp births                      n= 240 mean=  -0.68 sd=  2.23 naive± 0.28 seed± 0.34 deff=1.43
+LA-Opp losses                      n= 240 mean=  -0.61 sd=  2.12 naive± 0.27 seed± 0.24 deff=0.78
+LA-Opp end population              n= 240 mean=  -0.07 sd=  2.95 naive± 0.37 seed± 0.37 deff=0.99
+LA-Opp extinct share               n= 240 mean=  -0.13 sd=  0.71 naive± 0.09 seed± 0.11 deff=1.46
+extinct LA 36.2% Opp 49.2% | only LA 47, only Opp 78, McNemar z=+2.77
+LA first place 57/240 = 23.8%
+--- epochs 2-4 (methods shuffled, 184): 180 epochs, 30 seeds
+LA score (absolute)                n= 180 mean= -22.31 sd=  8.34 naive± 1.22 seed± 1.07 deff=0.78
+LA-Opp score                       n= 180 mean=  +0.55 sd= 13.29 naive± 1.94 seed± 1.95 deff=1.01
+LA-Utility score                   n= 180 mean=  +2.01 sd= 13.00 naive± 1.90 seed± 1.49 deff=0.61
+Opp-Utility score                  n= 180 mean=  +1.46 sd= 12.57 naive± 1.84 seed± 1.79 deff=0.95
+LA-4 serious score                 n= 180 mean=  +2.13 sd=  9.60 naive± 1.40 seed± 1.32 deff=0.88
+LA-Opp births                      n= 180 mean=  -0.39 sd=  1.68 naive± 0.25 seed± 0.27 deff=1.19
+LA-Opp losses                      n= 180 mean=  -0.61 sd=  1.96 naive± 0.29 seed± 0.25 deff=0.79
+LA-Opp end population              n= 180 mean=  +0.22 sd=  2.17 naive± 0.32 seed± 0.28 deff=0.77
+LA-Opp extinct share               n= 180 mean=  -0.12 sd=  0.74 naive± 0.11 seed± 0.13 deff=1.35
+extinct LA 40.6% Opp 52.8% | only LA 39, only Opp 61, McNemar z=+2.20
+LA first place 46/180 = 25.6%
+epoch 1: LA-Opp -1.60 ±4.67 sd 18.47 n=60
+epoch 2: LA-Opp +1.46 ±3.42 sd 13.51 n=60
+epoch 3: LA-Opp -0.75 ±3.20 sd 12.66 n=60
+epoch 4: LA-Opp +0.94 ±3.49 sd 13.79 n=60

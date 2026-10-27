@@ -1,0 +1,16 @@
+patch B touched lines (diff size): 7
+unittest on patched B: ['Ran 38 tests in 0.299s', '', 'OK']
+self_check patched B: 17 / 17
+B determinism seed 31/520: export bytes equal=True ledger_error=0
+B determinism seed 101/1500: export bytes equal=True ledger_error=-2.27e-13
+B0 (refactor only) export == BASE: True
+B export != BASE: True | lookahead_opponent_bias: 323 | probe calls/fired/flipped-argmax: {'calls': 501, 'fired': 323, 'flipped': 28}
+opponent_predictions BASE vs B0: 254 254
+B 6000 ticks seed 202: ledger_error=0 episodes=5 probe={'calls': 1811, 'fired': 978, 'flipped': 197}
+  max len(observed_decisions)= 0 (cap trigger 120 ) | max sum(opponent)= 8.0 | stats keys= 67 | forecasts 240 | ledger outcomes 120 120
+RNG after _choose closed==open: True | tie_rng equal: True | actions: ATTACK -> ATTACK | bias fired open: 5
+  open reason len 120 | GUI card shows reason[:82] -> '/ finite combat / viable heirs' | suffix visible: False
+2000 ticks seed 303 BASE [2.3, 2.32, 2.26] B [2.43, 2.22, 2.2] median delta -3.5%
+_opponent_bias per call: 2.23 us
+over 6000 ticks: max len(observed_decisions)=30 (prune at >120), max sum(opponent)=240.0 (leak at >240), max population=29, max Lookahead pop=6, ledger_error=0, lookahead_opponent_bias=978
+self_check replay world (seed31/520/ep240): lookahead_opponent_bias = 189 | opponent_predictions = 87

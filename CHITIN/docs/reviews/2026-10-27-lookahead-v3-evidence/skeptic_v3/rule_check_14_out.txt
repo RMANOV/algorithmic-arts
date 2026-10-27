@@ -1,0 +1,8 @@
+P1 score LA-Utility      n=240 mean=+1.3281 naiveSE=0.9472 seedSE=0.9915 wider=seed half=2.3737 CI=[-1.0457; +3.7018]
+P2 pop LA-Utility        n=240 mean=-0.0333 naiveSE=0.1696 seedSE=0.1832 wider=seed half=0.4387 CI=[-0.4720; +0.4053]
+P3 extinct LA-Utility    n=240 mean=-0.0208 naiveSE=0.0444 seedSE=0.0468 wider=seed half=0.1120 CI=[-0.1329; +0.0912]
+decision: CLOSE
+LA score abs     mean=-23.5855 sd=9.6908 deff=1.18
+LA losses abs    mean=+3.6208 sd=1.4326 deff=0.65
+LA extinct abs   mean=+0.3625 sd=0.4817 deff=1.05
+LA pop abs       mean=+1.4792 sd=1.7925 deff=0.92

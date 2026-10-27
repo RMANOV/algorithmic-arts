@@ -1,0 +1,41 @@
+closed epochs 240
+
+[1] LA-Opp epochs>=2: n=180 mean +0.55 sd 13.29 ±1.94
+    epoch 2: n=60 mean +1.46 sd 13.51 ±3.42
+    epoch 3: n=60 mean -0.75 sd 12.66 ±3.20
+    epoch 4: n=60 mean +0.94 sd 13.79 ±3.49
+[2] cluster=world: G=60 cluster-robust ±2.14 deff 1.22 | mean of cluster means +0.55 ±2.14
+[2] cluster=seed: G=30 cluster-robust ±1.98 deff 1.04 | mean of cluster means +0.55 ±1.98
+[3] Lookahead absolute score epochs>=2 sd 8.34 -> SE(B-BASE) at 660/arm 0.46; P(gate "B >= BASE-0.5" fails | zero true effect) = 14%
+[3] Opponent absolute score epochs>=2 sd 8.49 -> SE(B-BASE) at 660/arm 0.47; P(gate "B >= BASE-1.0" fails | zero true effect) = 2%
+[3b] two-arm test of patch effect on d: SE 0.73; power for Delta=1.0: 28%; n/arm for 80%: 2772 epochs (x deff)
+[3b] two-arm test of patch effect on d: SE 0.73; power for Delta=1.5: 54%; n/arm for 80%: 1232 epochs (x deff)
+
+[4] exact rule, 110 seeds x2 learning x epochs 2-4 per arm, resampled worlds; baseline d0 = data mean +0.55 shifted to d0
+    d0=+0.00 Delta=0.0: parked 2%, refuted 78%, refuted&parked(overlap) 16%, ship 0%, stop_sanity 4%
+    d0=+0.00 Delta=0.5: parked 15%, refuted 47%, refuted&parked(overlap) 30%, ship 4%, stop_sanity 4%
+    d0=+0.00 Delta=1.0: parked 26%, refuted 18%, refuted&parked(overlap) 33%, ship 18%, ship-blocked-by-noninferiority 3%, stop_sanity 3%
+    d0=+0.00 Delta=1.5: parked 33%, refuted 4%, refuted&parked(overlap) 13%, ship 43%, ship-blocked-by-noninferiority 2%, stop_sanity 6%
+    d0=+0.55 Delta=0.0: parked 14%, refuted 32%, refuted&parked(overlap) 29%, ship 4%, ship-blocked-by-noninferiority 2%, stop_sanity 20%
+    d0=+0.55 Delta=0.5: parked 21%, refuted 10%, refuted&parked(overlap) 31%, ship 14%, ship-blocked-by-noninferiority 2%, stop_sanity 22%
+    d0=+0.55 Delta=1.0: parked 24%, refuted 2%, refuted&parked(overlap) 14%, ship 40%, ship-blocked-by-noninferiority 2%, stop_sanity 17%
+    d0=+0.55 Delta=1.5: parked 8%, refuted 0%, refuted&parked(overlap) 3%, ship 64%, ship-blocked-by-noninferiority 3%, stop_sanity 22%
+    d0=+1.00 Delta=0.0: parked 16%, refuted 10%, refuted&parked(overlap) 16%, ship 7%, ship-blocked-by-noninferiority 3%, stop_sanity 49%
+    d0=+1.00 Delta=0.5: parked 18%, refuted 1%, refuted&parked(overlap) 9%, ship 23%, ship-blocked-by-noninferiority 3%, stop_sanity 46%
+    d0=+1.00 Delta=1.0: parked 7%, refuted 0%, refuted&parked(overlap) 2%, ship 37%, ship-blocked-by-noninferiority 3%, stop_sanity 50%
+    d0=+1.00 Delta=1.5: parked 2%, ship 46%, ship-blocked-by-noninferiority 3%, stop_sanity 49%
+[4b] zero LA effect, Opp -0.9 (inside margin): parked 24%, refuted 3%, refuted&parked(overlap) 14%, ship 9%, ship-blocked-by-noninferiority 32%, stop_sanity 18%
+[5] corr(score, decisions) over faction-epochs (epochs>=2): -0.184
+[5] corr(score, births) over faction-epochs (epochs>=2): -0.405
+[5] corr(score, losses) over faction-epochs (epochs>=2): -0.511
+[5] corr(score, kills) over faction-epochs (epochs>=2): +0.511
+[5] corr(score, pop_end) over faction-epochs (epochs>=2): +0.072
+[5b] within-epoch slope score~decisions: -0.0067 per decision (-0.67 per 100 decisions); corr -0.140
+    Lookahead  score  -22.31 decisions    384 births 0.81 losses 3.49 extinct 40.6% pop_end 1.32
+    Opponent   score  -22.86 decisions    366 births 1.19 losses 4.09 extinct 52.8% pop_end 1.10
+    Utility    score  -24.32 decisions    392 births 1.13 losses 3.88 extinct 40.6% pop_end 1.24
+    UCB        score  -26.53 decisions    325 births 1.22 losses 4.43 extinct 61.1% pop_end 0.78
+    Q-learning score  -24.05 decisions    340 births 1.01 losses 4.12 extinct 53.3% pop_end 0.89
+    Reflex     score  -37.42 decisions    515 births 2.92 losses 5.18 extinct 45.6% pop_end 1.73
+[5c] LA-Opp after removing within-epoch decisions slope: +0.67 ±2.01 (raw +0.55); mean dec diff +17.5
+[6] early-closed epochs: 37/240

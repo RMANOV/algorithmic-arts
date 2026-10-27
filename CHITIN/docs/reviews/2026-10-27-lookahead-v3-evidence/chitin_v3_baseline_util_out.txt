@@ -1,0 +1,12 @@
+--- all closed: n=240
+LA-Utility births                  n= 240 mean=  -0.51 sd=  2.06 naive± 0.26 seed± 0.28 deff=1.17
+LA-Utility losses                  n= 240 mean=  -0.48 sd=  2.16 naive± 0.27 seed± 0.28 deff=1.04
+LA-Utility pop                     n= 240 mean=  -0.03 sd=  2.63 naive± 0.33 seed± 0.36 deff=1.17
+LA-Utility extinct share           n= 240 mean=  -0.02 sd=  0.69 naive± 0.09 seed± 0.09 deff=1.11
+extinct LA 36.2% Utility 38.3% | only LA 54, only Utility 59, McNemar z=+0.47
+--- epochs 2-4: n=180
+LA-Utility births                  n= 180 mean=  -0.32 sd=  1.69 naive± 0.25 seed± 0.23 deff=0.85
+LA-Utility losses                  n= 180 mean=  -0.39 sd=  2.12 naive± 0.31 seed± 0.24 deff=0.60
+LA-Utility pop                     n= 180 mean=  +0.07 sd=  2.16 naive± 0.31 seed± 0.26 deff=0.69
+LA-Utility extinct share           n= 180 mean=  +0.00 sd=  0.70 naive± 0.10 seed± 0.10 deff=0.97
+extinct LA 40.6% Utility 40.6% | only LA 44, only Utility 44, McNemar z=+0.00

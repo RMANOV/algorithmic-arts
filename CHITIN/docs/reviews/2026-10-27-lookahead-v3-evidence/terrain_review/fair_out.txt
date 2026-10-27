@@ -1,0 +1,9 @@
+counts {'already_in_range': 1093, 'censored': 1018} arrivals 1244
+all arrivals                       n= 1244 actual mean   16.8 | MAE S   1.82 T   1.22 P   1.28 | bias S  -1.75 T  -0.96 P  -0.89
+crossing before mining range       n=   67 actual mean   32.1 | MAE S  16.16 T   4.93 P   5.02 | bias S -16.16 T  -1.47 P  -1.65
+crossing only beyond range (full)  n=   13 actual mean   27.5 | MAE S   1.04 T   1.04 P   6.82 | bias S  -0.67 T  -0.67 P  +6.72
+no crossing                        n= 1164 actual mean   15.8 | MAE S   1.01 T   1.01 P   1.01 | bias S  -0.93 T  -0.93 P  -0.93
+Lookahead crossing                 n=    7 actual mean   74.3 | MAE S  39.07 T   1.64 P   5.82 | bias S -39.07 T  -1.42 P  -5.00
+10-move progress, crossing paths n=59: MAE S 0.808 units (energy x.055 = 0.0445)
+10-move progress, crossing paths n=59: MAE P 0.358 units (energy x.055 = 0.0197)
+10-move progress, crossing paths n=59: MAE T 0.183 units (energy x.055 = 0.0100)

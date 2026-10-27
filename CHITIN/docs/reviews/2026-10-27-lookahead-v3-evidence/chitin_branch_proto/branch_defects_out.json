@@ -1,0 +1,188 @@
+{
+ "101": {
+  "branches": 3924,
+  "won": 1090,
+  "phantom": 802,
+  "phantom_won": 16,
+  "phantom_won_and_prefix_top": 9,
+  "phantom_received_zero": 802,
+  "mixed": 28,
+  "mixed_won": 3,
+  "mixed_won_and_prefix_top": 2,
+  "mixed_received_zero": 14
+ },
+ "101_examples": [
+  {
+   "prefix": "MINE",
+   "cont": "ATTACK",
+   "phantom": true,
+   "mixed": false,
+   "received": 0.0,
+   "dealt": 0.0,
+   "uid": 24,
+   "tick": 1,
+   "won": false,
+   "prefix_is_argmax": false
+  },
+  {
+   "prefix": "RETREAT",
+   "cont": "ATTACK",
+   "phantom": true,
+   "mixed": false,
+   "received": 0.0,
+   "dealt": 0.0,
+   "uid": 24,
+   "tick": 1,
+   "won": false,
+   "prefix_is_argmax": false
+  },
+  {
+   "prefix": "FLANK",
+   "cont": "RAID",
+   "phantom": false,
+   "mixed": true,
+   "received": 9.936632958354853,
+   "dealt": 16.105392367177092,
+   "uid": 38,
+   "tick": 1357,
+   "won": false,
+   "prefix_is_argmax": true
+  },
+  {
+   "prefix": "ATTACK",
+   "cont": "RAID",
+   "phantom": false,
+   "mixed": true,
+   "received": 9.936632958354853,
+   "dealt": 16.105392367177092,
+   "uid": 38,
+   "tick": 1357,
+   "won": false,
+   "prefix_is_argmax": false
+  }
+ ],
+ "202": {
+  "branches": 2956,
+  "won": 906,
+  "phantom": 331,
+  "phantom_won": 21,
+  "phantom_won_and_prefix_top": 4,
+  "phantom_received_zero": 331,
+  "mixed": 32,
+  "mixed_won": 0,
+  "mixed_won_and_prefix_top": 0,
+  "mixed_received_zero": 6
+ },
+ "202_examples": [
+  {
+   "prefix": "MINE",
+   "cont": "ATTACK",
+   "phantom": true,
+   "mixed": false,
+   "received": 0.0,
+   "dealt": 0.0,
+   "uid": 22,
+   "tick": 1,
+   "won": false,
+   "prefix_is_argmax": false
+  },
+  {
+   "prefix": "RETREAT",
+   "cont": "ATTACK",
+   "phantom": true,
+   "mixed": false,
+   "received": 0.0,
+   "dealt": 0.0,
+   "uid": 22,
+   "tick": 1,
+   "won": false,
+   "prefix_is_argmax": false
+  },
+  {
+   "prefix": "RAID",
+   "cont": "ATTACK",
+   "phantom": false,
+   "mixed": true,
+   "received": 42.77744343622542,
+   "dealt": 63.35999999999994,
+   "uid": 54,
+   "tick": 1517,
+   "won": false,
+   "prefix_is_argmax": false
+  },
+  {
+   "prefix": "RAID",
+   "cont": "FLANK",
+   "phantom": false,
+   "mixed": true,
+   "received": 36.36082692079158,
+   "dealt": 63.35999999999994,
+   "uid": 54,
+   "tick": 1517,
+   "won": false,
+   "prefix_is_argmax": false
+  }
+ ],
+ "303": {
+  "branches": 3772,
+  "won": 1083,
+  "phantom": 518,
+  "phantom_won": 52,
+  "phantom_won_and_prefix_top": 31,
+  "phantom_received_zero": 518,
+  "mixed": 22,
+  "mixed_won": 4,
+  "mixed_won_and_prefix_top": 2,
+  "mixed_received_zero": 6
+ },
+ "303_examples": [
+  {
+   "prefix": "MINE",
+   "cont": "ATTACK",
+   "phantom": true,
+   "mixed": false,
+   "received": 0.0,
+   "dealt": 0.0,
+   "uid": 21,
+   "tick": 3,
+   "won": false,
+   "prefix_is_argmax": false
+  },
+  {
+   "prefix": "RETREAT",
+   "cont": "ATTACK",
+   "phantom": true,
+   "mixed": false,
+   "received": 0.0,
+   "dealt": 0.0,
+   "uid": 21,
+   "tick": 3,
+   "won": false,
+   "prefix_is_argmax": false
+  },
+  {
+   "prefix": "RAID",
+   "cont": "ATTACK",
+   "phantom": false,
+   "mixed": true,
+   "received": 20.762905546153736,
+   "dealt": 55.22768997897725,
+   "uid": 43,
+   "tick": 1570,
+   "won": false,
+   "prefix_is_argmax": false
+  },
+  {
+   "prefix": "RAID",
+   "cont": "FLANK",
+   "phantom": false,
+   "mixed": true,
+   "received": 17.648469714230693,
+   "dealt": 55.22768997897725,
+   "uid": 43,
+   "tick": 1570,
+   "won": false,
+   "prefix_is_argmax": false
+  }
+ ]
+}

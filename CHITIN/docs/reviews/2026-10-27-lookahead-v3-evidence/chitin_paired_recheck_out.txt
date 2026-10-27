@@ -1,0 +1,7 @@
+LA vs 4 serious: n=240 mean=+1.54 ±1.38 wins=51%
+LA vs Opponent: n=240 mean=+0.01 ±1.87 wins=48%
+LA vs UCB: n=240 mean=+3.58 ±1.49 wins=61%
+LA vs 4 serious, epochs 4+: n=60 mean=+1.99 ±2.65 wins=47%
+LA vs all 5 (aggregate_methods.py definition): n=240 mean=+3.97 ±1.36 wins=62%
+Opponent decisions (all snaps) 112295, opponent_predictions 62760, gate pass 55.9%
+epoch index distribution: [1, 2, 3, 4]

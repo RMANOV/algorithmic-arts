@@ -1,0 +1,11 @@
+seed 101: instrumented snapshot == stored summary: True
+seed 202: instrumented snapshot == stored summary: True
+Lookahead planning calls 3057; gate open 1978 (64.7%)
+planner itself changes the utility argmax: 240 (7.9% of LA decisions)
+B bias touches an eligible action: 1419 (46.4%)
+B would change Lookahead's final choice: 421 (13.8% of LA decisions, 21.3% of gated)
+|planner correction| per eligible action: median 0.102, mean 0.223, p90 0.577
+final top1-top2 margin: median 0.616; share < .5: 43%; share < .9: 61%
+pred under gate: {'ATTACK': 1095, 'RETREAT': 808, 'FLANK': 46, 'MINE': 27, 'RAID': 2}
+contradiction with current enemy action (which the planner already uses): {'pred ATTACK total': 1095, 'pred ATTACK, nearest enemy now not attacking': 586, 'pred RETREAT total': 808, 'pred RETREAT, nearest enemy now not retreating': 297}
+B flips (from->to), top 8: [('ATTACK->FLANK', 135), ('FLANK->RAID', 68), ('RETREAT->FLANK', 58), ('RETREAT->GUARD', 34), ('ATTACK->RAID', 30), ('ESCORT->GUARD', 22), ('RETREAT->RAID', 20), ('ATTACK->GUARD', 16)]

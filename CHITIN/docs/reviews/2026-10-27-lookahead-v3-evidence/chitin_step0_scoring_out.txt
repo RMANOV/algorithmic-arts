@@ -1,0 +1,18 @@
+seed 101 rows 8215
+seed 202 rows 6746
+[fit 101 -> test 202] w0 combat share LA gated n=907: persist MAE 0.130 MSE 0.0803 | hist_p MAE 0.321 MSE 0.1366 | hist_recal MAE 0.335 MSE 0.1447 | cond_mean MAE 0.198 MSE 0.0659 | const MAE 0.428 MSE 0.2016
+[fit 101 -> test 202] w0 combat share all gated n=5982: persist MAE 0.179 MSE 0.1080 | hist_p MAE 0.373 MSE 0.1798 | hist_recal MAE 0.364 MSE 0.1711 | cond_mean MAE 0.209 MSE 0.0727 | const MAE 0.391 MSE 0.1771
+[fit 101 -> test 202] w0 chase share, enemy not chasing now, all gated n=3184 (realized mean 0.123): persist(0) MAE 0.123 MSE 0.0682 | hist_pchase MAE 0.377 MSE 0.1734 | hist_recal MAE 0.283 MSE 0.0993 | cond_mean MAE 0.148 MSE 0.0507
+[fit 101 -> test 202] w0   share of those rows with realized chase share exactly 0: 69.5%
+[fit 101 -> test 202] w10 combat share LA gated n=907: persist MAE 0.146 MSE 0.0972 | hist_p MAE 0.325 MSE 0.1396 | hist_recal MAE 0.340 MSE 0.1483 | cond_mean MAE 0.222 MSE 0.0793 | const MAE 0.429 MSE 0.2029
+[fit 101 -> test 202] w10 combat share all gated n=5982: persist MAE 0.202 MSE 0.1322 | hist_p MAE 0.378 MSE 0.1845 | hist_recal MAE 0.366 MSE 0.1734 | cond_mean MAE 0.232 MSE 0.0871 | const MAE 0.391 MSE 0.1778
+[fit 101 -> test 202] w10 chase share, enemy not chasing now, all gated n=3184 (realized mean 0.134): persist(0) MAE 0.134 MSE 0.0801 | hist_pchase MAE 0.379 MSE 0.1741 | hist_recal MAE 0.280 MSE 0.0975 | cond_mean MAE 0.161 MSE 0.0590
+[fit 101 -> test 202] w10   share of those rows with realized chase share exactly 0: 68.5%
+[fit 202 -> test 101] w0 combat share LA gated n=1154: persist MAE 0.196 MSE 0.1233 | hist_p MAE 0.421 MSE 0.2301 | hist_recal MAE 0.392 MSE 0.1845 | cond_mean MAE 0.214 MSE 0.0711 | const MAE 0.385 MSE 0.1738
+[fit 202 -> test 101] w0 combat share all gated n=7304: persist MAE 0.173 MSE 0.1077 | hist_p MAE 0.384 MSE 0.1924 | hist_recal MAE 0.371 MSE 0.1638 | cond_mean MAE 0.212 MSE 0.0714 | const MAE 0.399 MSE 0.1810
+[fit 202 -> test 101] w0 chase share, enemy not chasing now, all gated n=4054 (realized mean 0.091): persist(0) MAE 0.091 MSE 0.0441 | hist_pchase MAE 0.410 MSE 0.2088 | hist_recal MAE 0.355 MSE 0.1494 | cond_mean MAE 0.143 MSE 0.0347
+[fit 202 -> test 101] w0   share of those rows with realized chase share exactly 0: 72.8%
+[fit 202 -> test 101] w10 combat share LA gated n=1154: persist MAE 0.218 MSE 0.1491 | hist_p MAE 0.430 MSE 0.2386 | hist_recal MAE 0.394 MSE 0.1853 | cond_mean MAE 0.236 MSE 0.0847 | const MAE 0.387 MSE 0.1753
+[fit 202 -> test 101] w10 combat share all gated n=7304: persist MAE 0.198 MSE 0.1346 | hist_p MAE 0.391 MSE 0.1996 | hist_recal MAE 0.375 MSE 0.1657 | cond_mean MAE 0.236 MSE 0.0872 | const MAE 0.400 MSE 0.1816
+[fit 202 -> test 101] w10 chase share, enemy not chasing now, all gated n=4054 (realized mean 0.099): persist(0) MAE 0.099 MSE 0.0520 | hist_pchase MAE 0.409 MSE 0.2072 | hist_recal MAE 0.346 MSE 0.1408 | cond_mean MAE 0.154 MSE 0.0410
+[fit 202 -> test 101] w10   share of those rows with realized chase share exactly 0: 71.6%

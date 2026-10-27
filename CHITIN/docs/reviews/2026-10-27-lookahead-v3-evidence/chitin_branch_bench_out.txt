@@ -1,0 +1,2 @@
+seed 101: 3000 ticks in 4.68s = 640 ticks/s | predictive_scores calls 1067 (0.36/tick), total 1616 ms = 34.5% of wall, 1.514 ms/call, mean candidates 4.51, lifetime calls 4811, population 23, ledger_error 0.0
+seed 202: 3000 ticks in 3.48s = 863 ticks/s | predictive_scores calls 1022 (0.34/tick), total 1313 ms = 37.7% of wall, 1.284 ms/call, mean candidates 4.10, lifetime calls 4192, population 24, ledger_error 0.0
