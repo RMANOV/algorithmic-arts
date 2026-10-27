@@ -1,0 +1,84 @@
+files 6 | worlds 60 | seeds 30 | closed epochs 240 | selected epochs 1-4: 240 | rows 1440
+versions ["'CHITIN 2.0.1 \\u2014 Lifetime and forecast validation'"]
+closed epochs per world {4: 60}
+
+== closed epochs 1-4, all runs: 240 epochs ==
+method         n score mean   median  top1 %  rank  births  kills  losses  pop end   decis
+Lookahead    240     -23.59   -24.50   23.8%  2.98    1.10   2.85    3.62     1.48     420
+Opponent     240     -23.60   -24.03   27.1%  2.95    1.77   3.04    4.23     1.55     441
+Q-learning   240     -24.84   -25.94   17.9%  3.09    0.96   1.65    4.05     0.92     330
+Utility      240     -24.91   -25.61   20.4%  3.16    1.61   2.77    4.10     1.51     446
+UCB          240     -27.16   -27.41    9.6%  3.55    1.43   1.56    4.46     0.96     352
+Reflex       240     -37.26   -36.19    1.2%  5.27    2.80   1.07    5.02     1.78     512
+
+== closed epochs 1-4, learning ON: 120 epochs ==
+method         n score mean   median  top1 %  rank  births  kills  losses  pop end   decis
+Opponent     120     -22.63   -23.16   31.7%  2.73    1.70   3.48    4.33     1.37     451
+Lookahead    120     -23.86   -24.55   23.3%  2.97    1.18   2.77    3.60     1.58     424
+Q-learning   120     -25.00   -25.99   15.8%  3.10    1.01   1.54    4.16     0.85     319
+Utility      120     -25.44   -25.56   20.8%  3.19    1.71   2.92    4.14     1.57     454
+UCB          120     -28.35   -27.81    7.5%  3.77    1.62   1.38    4.86     0.77     331
+Reflex       120     -38.16   -36.89    0.8%  5.24    2.83   1.12    5.09     1.73     519
+
+== closed epochs 1-4, learning OFF (Q/UCB ablated): 120 epochs ==
+method         n score mean   median  top1 %  rank  births  kills  losses  pop end   decis
+Lookahead    120     -23.31   -24.39   24.2%  2.99    1.02   2.94    3.64     1.38     417
+Utility      120     -24.39   -25.61   20.0%  3.12    1.52   2.62    4.06     1.46     438
+Opponent     120     -24.57   -25.83   22.5%  3.17    1.85   2.59    4.12     1.73     431
+Q-learning   120     -24.69   -25.68   20.0%  3.08    0.92   1.75    3.93     0.98     340
+UCB          120     -25.98   -26.70   11.7%  3.33    1.23   1.75    4.07     1.16     373
+Reflex       120     -36.36   -35.78    1.7%  5.29    2.77   1.02    4.94     1.82     505
+
+Paired per epoch (n=240): Lookahead - others mean = +3.97 +/- 1.36 (95% CI) | epochs where Lookahead > others: 150/240 = 62%
+sign test z = +3.87 (|z|>1.96 ~ p<0.05)
+Lookahead ranks first in 57/240 epochs = 24% (chance 16.7%)
+
+--- contrasts, epochs 1-4: 240 epochs, 30 seeds
+LA score (absolute)                n= 240 mean= -23.59 sd=  9.69 naive+/- 1.23 seed+/- 1.33 deff=1.18
+LA-Utility score                   n= 240 mean=  +1.33 sd= 14.67 naive+/- 1.86 seed+/- 1.94 deff=1.10
+LA-Opponent score                  n= 240 mean=  +0.01 sd= 14.74 naive+/- 1.87 seed+/- 2.18 deff=1.37
+Opponent-Utility score             n= 240 mean=  +1.32 sd= 14.19 naive+/- 1.80 seed+/- 1.84 deff=1.05
+LA-UCB score                       n= 240 mean=  +3.58 sd= 11.77 naive+/- 1.49 seed+/- 1.55 deff=1.08
+LA-4 serious score                 n= 240 mean=  +1.54 sd= 10.95 naive+/- 1.38 seed+/- 1.61 deff=1.36
+LA-Opponent births                 n= 240 mean=  -0.68 sd=  2.23 naive+/- 0.28 seed+/- 0.34 deff=1.43
+LA-Opponent losses                 n= 240 mean=  -0.61 sd=  2.12 naive+/- 0.27 seed+/- 0.24 deff=0.78
+LA-Opponent end population         n= 240 mean=  -0.07 sd=  2.95 naive+/- 0.37 seed+/- 0.37 deff=0.99
+LA-Opponent extinct share          n= 240 mean=  -0.13 sd=  0.71 naive+/- 0.09 seed+/- 0.11 deff=1.46
+extinct LA 36.2% Opponent 49.2% | only LA 47, only Opponent 78, McNemar z=+2.77
+LA-Utility births                  n= 240 mean=  -0.51 sd=  2.06 naive+/- 0.26 seed+/- 0.28 deff=1.17
+LA-Utility losses                  n= 240 mean=  -0.48 sd=  2.16 naive+/- 0.27 seed+/- 0.28 deff=1.04
+LA-Utility end population          n= 240 mean=  -0.03 sd=  2.63 naive+/- 0.33 seed+/- 0.36 deff=1.17
+LA-Utility extinct share           n= 240 mean=  -0.02 sd=  0.69 naive+/- 0.09 seed+/- 0.09 deff=1.11
+extinct LA 36.2% Utility 38.3% | only LA 54, only Utility 59, McNemar z=+0.47
+LA first place 57/240 = 23.8%
+--- learning ON: 120 epochs
+P1 score LA-Utility                n= 120 mean=  +1.58 sd= 14.34 naive+/- 2.56 seed+/- 2.15 deff=0.70
+P2 pop LA-Utility                  n= 120 mean=  +0.02 sd=  2.92 naive+/- 0.52 seed+/- 0.59 deff=1.26
+P3 extinct LA-Utility              n= 120 mean=  -0.01 sd=  0.67 naive+/- 0.12 seed+/- 0.09 deff=0.62
+--- learning OFF: 120 epochs
+P1 score LA-Utility                n= 120 mean=  +1.08 sd= 15.06 naive+/- 2.69 seed+/- 2.52 deff=0.87
+P2 pop LA-Utility                  n= 120 mean=  -0.08 sd=  2.31 naive+/- 0.41 seed+/- 0.36 deff=0.77
+P3 extinct LA-Utility              n= 120 mean=  -0.03 sd=  0.71 naive+/- 0.13 seed+/- 0.13 deff=1.05
+
+--- by epoch index (all closed epochs)
+epoch 1: LA-Opp -1.60 +/-4.67 sd 18.47 n=60
+epoch 1: LA-Util -0.71 +/-4.76 sd 18.81 n=60
+epoch 2: LA-Opp +1.46 +/-3.42 sd 13.51 n=60
+epoch 2: LA-Util +2.31 +/-3.03 sd 11.99 n=60
+epoch 3: LA-Opp -0.75 +/-3.20 sd 12.66 n=60
+epoch 3: LA-Util +1.42 +/-3.42 sd 13.53 n=60
+epoch 4: LA-Opp +0.94 +/-3.49 sd 13.79 n=60
+epoch 4: LA-Util +2.29 +/-3.45 sd 13.62 n=60
+
+--- registered rule: Z=2.394, SE = wider of naive and seed-clustered, epochs 1-4
+P1 score LA-Utility      n=240 mean=+1.3281 naiveSE=0.9472 seedSE=0.9915 wider=seed half=2.3737 CI=[-1.0457; +3.7018]
+P2 pop LA-Utility        n=240 mean=-0.0333 naiveSE=0.1696 seedSE=0.1832 wider=seed half=0.4387 CI=[-0.4720; +0.4053]
+P3 extinct LA-Utility    n=240 mean=-0.0208 naiveSE=0.0444 seedSE=0.0468 wider=seed half=0.1120 CI=[-0.1329; +0.0912]
+decision: CLOSE
+
+--- descriptives
+early-closed epochs: selected 37/240 = 15.4% | all closed 37/240 = 15.4%
+ticks/s per world: min 371.0 median 591.7 max 802.3 (n=60)
+max |ledger_error| over all snapshots: 4.547e-13
+prediction short (validation): evaluated 92327, pooled mean error 0.448, censored 2459 = 2.59%
+prediction long (30/90/180): evaluated 17260, pooled mean error 6.752

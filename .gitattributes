@@ -1,2 +1,4 @@
 # Preserve the exact delivered bytes verified by CHITIN/SHA256SUMS.txt.
 CHITIN/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# The V3 comparison tool is registered by SHA256 (plan section 4); checkouts must keep its bytes.
+tools/** -text
