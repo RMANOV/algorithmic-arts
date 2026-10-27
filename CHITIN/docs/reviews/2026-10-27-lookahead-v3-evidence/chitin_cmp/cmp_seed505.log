@@ -1,0 +1,11 @@
+seed=505 learning=True ticks=6000 epoch=5 population=24 rate=728.2 ticks/s
+seed=505 learning=False ticks=6000 epoch=5 population=23 rate=433.1 ticks/s
+seed=506 learning=True ticks=6000 epoch=5 population=18 rate=625.4 ticks/s
+seed=506 learning=False ticks=6000 epoch=5 population=24 rate=710.1 ticks/s
+seed=507 learning=True ticks=6000 epoch=5 population=25 rate=597.2 ticks/s
+seed=507 learning=False ticks=6000 epoch=5 population=24 rate=618.0 ticks/s
+seed=508 learning=True ticks=6000 epoch=5 population=24 rate=505.2 ticks/s
+seed=508 learning=False ticks=6000 epoch=5 population=21 rate=552.5 ticks/s
+seed=509 learning=True ticks=6000 epoch=5 population=28 rate=523.9 ticks/s
+seed=509 learning=False ticks=6000 epoch=5 population=21 rate=604.9 ticks/s
+Saved C:\Users\rmanov\AppData\Local\Temp\claude\C--Users-rmanov\86e2f950-a79d-4302-9312-6c5662ae20a8\scratchpad\chitin_cmp\cmp_seed505.json

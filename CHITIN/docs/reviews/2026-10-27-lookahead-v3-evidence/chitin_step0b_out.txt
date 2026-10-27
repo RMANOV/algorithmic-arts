@@ -1,0 +1,14 @@
+seed 101: observed transitions 14406, 60-tick windows 8396, median gap between observations 10.0 ticks
+seed 202: observed transitions 13560, 60-tick windows 6860, median gap between observations 10.0 ticks
+
+fit 101 -> test 202 (n=13560): next action: persistence 76.7% | conditional argmax 76.7% | combat-class: persistence 85.2% | conditional 85.2%
+  conditional argmax by current action (train): MINE->MINE, BUILD->ATTACK, ATTACK->ATTACK, RETREAT->RETREAT, GUARD->GUARD, FLANK->FLANK, RAID->RAID, ESCORT->ESCORT
+  per current action (test): RETREAT: n=5748 persist 86% cond 86%, ATTACK: n=4230 persist 79% cond 79%, FLANK: n=1628 persist 64% cond 64%, MINE: n=1017 persist 59% cond 59%, RAID: n=515 persist 72% cond 72%, GUARD: n=243 persist 25% cond 25%, ESCORT: n=165 persist 39% cond 39%, BUILD: n=14 persist 0% cond 50%
+  60-tick combat share (test, n=6860): MAE persistence 0.184 | conditional mean-by-current-action 0.209
+  empirical 60-tick combat share by current action (train): ATTACK=0.79, BUILD=1.00, ESCORT=0.67, FLANK=0.69, GUARD=0.65, MINE=0.38, RAID=0.78, RETREAT=0.09
+
+fit 202 -> test 101 (n=14406): next action: persistence 74.9% | conditional argmax 74.1% | combat-class: persistence 87.9% | conditional 88.0%
+  conditional argmax by current action (train): MINE->MINE, BUILD->ATTACK, ATTACK->ATTACK, RETREAT->RETREAT, GUARD->ATTACK, FLANK->FLANK, RAID->RAID, ESCORT->ESCORT
+  per current action (test): ATTACK: n=5314 persist 81% cond 81%, RETREAT: n=4569 persist 87% cond 87%, FLANK: n=1930 persist 58% cond 58%, MINE: n=1053 persist 53% cond 53%, RAID: n=786 persist 67% cond 67%, GUARD: n=432 persist 42% cond 12%, ESCORT: n=310 persist 35% cond 35%, BUILD: n=12 persist 0% cond 67%
+  60-tick combat share (test, n=8396): MAE persistence 0.181 | conditional mean-by-current-action 0.212
+  empirical 60-tick combat share by current action (train): ATTACK=0.78, BUILD=0.82, ESCORT=0.71, FLANK=0.78, GUARD=0.59, MINE=0.41, RAID=0.81, RETREAT=0.11

@@ -1,0 +1,22 @@
+seed 101: ticks 6000, epoch 5, decisions 12812, opponent_predictions 1039
+seed 202: ticks 6000, epoch 5, decisions 9628, opponent_predictions 787
+
+== gate pass by deciding method ==
+Lookahead   n=  3398 gated= 81.1%  argmax under gate: ATTACK:55%, RETREAT:41%, FLANK:2%, MINE:1%
+Opponent    n=  3106 gated= 85.4%  argmax under gate: RETREAT:47%, ATTACK:45%, MINE:7%, FLANK:1%
+Q-learning  n=  2849 gated= 87.5%  argmax under gate: ATTACK:50%, RETREAT:45%, FLANK:4%, MINE:0%
+Reflex      n=  6311 gated= 79.5%  argmax under gate: RETREAT:46%, ATTACK:36%, RAID:9%, FLANK:9%
+UCB         n=  2727 gated= 89.3%  argmax under gate: ATTACK:64%, RETREAT:35%, ESCORT:1%, FLANK:0%
+Utility     n=  4049 gated= 85.3%  argmax under gate: RETREAT:53%, ATTACK:36%, FLANK:7%, MINE:3%
+
+== next observed decision of the same enemy (same observing faction) ==
+[LA] n=4938: persistence 75.4% | argmax 45.3% | always-MINE 6.7% | combat-class: persist 88.0% argmax 63.7%
+[LA] gated only n=4492: persistence 75.6% | argmax 45.1% | combat-class: persist 88.2% argmax 64.0%
+[all] n=27966: persistence 75.8% | argmax 47.5% | always-MINE 6.5% | combat-class: persist 86.6% argmax 62.0%
+[all] gated only n=25435: persistence 76.0% | argmax 47.5% | combat-class: persist 86.6% argmax 61.8%
+
+== 60-tick realized combat-capable share of the nearest enemy (MAE of predictors) ==
+Lookahead decisions  gated    n=  2117 realized mean=0.447 | MAE persist=0.167 hist p_aggr=0.380 blend=0.244 const=0.403 | chase: persist=0.161 hist=0.365 | mean p_aggr=0.600 mean persist=0.516
+Lookahead decisions  ungated  n=   273 realized mean=0.529 | MAE persist=0.244 hist p_aggr=0.303 blend=0.230 const=0.343 | chase: persist=0.269 hist=0.306 | mean p_aggr=0.592 mean persist=0.586
+all decisions        gated    n= 13551 realized mean=0.438 | MAE persist=0.177 hist p_aggr=0.379 blend=0.247 const=0.392 | chase: persist=0.179 hist=0.366 | mean p_aggr=0.585 mean persist=0.501
+all decisions        ungated  n=  1705 realized mean=0.536 | MAE persist=0.227 hist p_aggr=0.306 blend=0.235 const=0.362 | chase: persist=0.242 hist=0.307 | mean p_aggr=0.595 mean persist=0.576

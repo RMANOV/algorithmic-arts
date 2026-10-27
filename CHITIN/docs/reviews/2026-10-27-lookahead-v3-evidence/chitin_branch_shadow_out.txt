@@ -1,0 +1,29 @@
+faithfulness seed 101 x1500: unpatched 5993d0091d1e864f | patched-A 5993d0091d1e864f | equal=True
+
+===== MODE A (world acts on fixed scores) =====
+2+-eligible decisions 3359 | fixed flips 251 (7.5%) | branched flips 89 (2.6%) | fixed!=branched 182 (5.4%) | undone 171 | new 9
+RETREAT vetoes (fixed) 118, undone by branch 84 (71%)
+fixed flips to: {'ATTACK': 14, 'ESCORT': 9, 'FLANK': 41, 'GUARD': 20, 'MINE': 33, 'RAID': 16, 'RETREAT': 118}
+branched flips to: {'ATTACK': 16, 'ESCORT': 3, 'FLANK': 5, 'GUARD': 4, 'MINE': 13, 'RAID': 13, 'RETREAT': 35}
+changes fixed->branched: {'RETREAT->ATTACK': 39, 'FLANK->ATTACK': 31, 'RETREAT->FLANK': 30, 'MINE->ATTACK': 17, 'RETREAT->RAID': 13, 'GUARD->ATTACK': 12, 'FLANK->RAID': 6, 'ESCORT->ATTACK': 5, 'RETREAT->MINE': 3, 'RAID->FLANK': 3}
+(b) continuations into ATTACK/FLANK/RAID 9747 of 18036 branches; combat silently lost (enemy dropped at 1502) 2628 (27.0%); RAID cont. vs other enemy 340
+uplift atk: beam members 4818, best is a switch 57.1%, mean score uplift +0.088
+uplift other: beam members 4746, best is a switch 49.5%, mean score uplift +0.060
+(c) next decision after a SWITCH-best choice: n=1893 picks assumed j 9.4% | keeps i 81.7%
+    control after a FIXED-best choice: n=1469 keeps i 78.9%
+(d) ATTACK/FLANK/RAID chosen with switch-best 1156; contact_i>12 and zero combat after switch 430 (37%)
+Lookahead action mix: {'ATTACK': '29.8%', 'BUILD': '0.2%', 'ESCORT': '4.2%', 'FLANK': '12.5%', 'GUARD': '14.8%', 'MINE': '5.8%', 'RAID': '6.0%', 'RETREAT': '26.7%'}
+
+===== MODE B (world acts on branched scores) =====
+2+-eligible decisions 2823 | fixed flips 174 (6.2%) | branched flips 71 (2.5%) | fixed!=branched 117 (4.1%) | undone 108 | new 5
+RETREAT vetoes (fixed) 70, undone by branch 48 (69%)
+fixed flips to: {'ATTACK': 8, 'ESCORT': 10, 'FLANK': 38, 'GUARD': 14, 'MINE': 17, 'RAID': 17, 'RETREAT': 70}
+branched flips to: {'ATTACK': 9, 'ESCORT': 4, 'FLANK': 15, 'GUARD': 5, 'MINE': 4, 'RAID': 12, 'RETREAT': 22}
+changes fixed->branched: {'RETREAT->ATTACK': 26, 'RETREAT->FLANK': 15, 'FLANK->ATTACK': 14, 'RETREAT->RAID': 8, 'FLANK->MINE': 7, 'RAID->RETREAT': 5, 'GUARD->ATTACK': 4, 'GUARD->RETREAT': 3, 'MINE->RETREAT': 3, 'MINE->GUARD': 3}
+(b) continuations into ATTACK/FLANK/RAID 7038 of 15486 branches; combat silently lost (enemy dropped at 1502) 2159 (30.7%); RAID cont. vs other enemy 135
+uplift atk: beam members 3448, best is a switch 59.7%, mean score uplift +0.073
+uplift other: beam members 4660, best is a switch 50.9%, mean score uplift +0.066
+(c) next decision after a SWITCH-best choice: n=1551 picks assumed j 10.9% | keeps i 76.3%
+    control after a FIXED-best choice: n=1257 keeps i 77.4%
+(d) ATTACK/FLANK/RAID chosen with switch-best 1018; contact_i>12 and zero combat after switch 405 (40%)
+Lookahead action mix: {'ATTACK': '31.6%', 'BUILD': '0.3%', 'ESCORT': '3.9%', 'FLANK': '10.0%', 'GUARD': '11.2%', 'MINE': '10.7%', 'RAID': '5.7%', 'RETREAT': '26.6%'}

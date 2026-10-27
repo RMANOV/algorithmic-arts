@@ -1,0 +1,5 @@
+LA losses: mean 3.489 sd 1.356 deff 0.68 -> two-arm n/arm for delta 0.3: 218 epochs (~73 worlds)
+LA losses: mean 3.489 sd 1.356 deff 0.68 -> two-arm n/arm for delta 0.5: 78 epochs (~26 worlds)
+LA extinct: mean 0.406 sd 0.492 deff 0.98 -> two-arm n/arm for delta 0.1: 374 epochs (~125 worlds)
+LA births: mean 0.806 sd 1.178 deff 0.87 -> two-arm n/arm for delta 0.3: 211 epochs (~70 worlds)
+founder drift per faction-tick 0.0138

@@ -1,0 +1,26 @@
+seed 101: 6000 ticks in 12.2s, epoch 5, pop 23
+seed 202: 6000 ticks in 9.5s, epoch 5, pop 24
+seed 303: 6000 ticks in 11.2s, epoch 5, pop 20
+
+== Lookahead decisions == {'decisions': 4447, 'mine_candidates': 3041, 'mine_already_there': 264, 'arrival_censored': 43, 'decisions_any_candidate_crossing': 372, 'decisions_chosen_path_crossing': 235, 'mine_default_crossing': 127}
+flips (shadow argmax != real argmax): 6 = 0.13% of decisions
+flip pairs (real -> shadow): [(('FLANK', 'ATTACK'), 2), (('RETREAT', 'ATTACK'), 2), (('RETREAT', 'RAID'), 1), (('FLANK', 'RAID'), 1)]
+chosen-path factor: mean 0.9776 share<.999 0.0528 share<.8 0.0443 share<.6 0.027
+min candidate factor <.8 share 0.0756
+
+== hazard damage per method (health) == {'Lookahead': 15.7, 'Opponent': 32.3, 'Q-learning': 28.5, 'Reflex': 69.4, 'UCB': 53.6, 'Utility': 35.2}
+Lookahead   moving_ticks   51228 ice  0.34% river  3.85% mountain  1.12%
+Opponent    moving_ticks   50549 ice  0.82% river  3.36% mountain  0.79%
+Q-learning  moving_ticks   41470 ice  1.15% river  2.04% mountain  0.00%
+Reflex      moving_ticks   86728 ice  0.42% river  6.04% mountain  1.16%
+UCB         moving_ticks   40855 ice  0.98% river  6.26% mountain  1.10%
+Utility     moving_ticks   63573 ice  2.38% river  5.00% mountain  1.12%
+== timing: predictive_scores A 1.770 ms/decision, shadow B 1.829 ms/decision ==
+== A2 potential (MINE candidate, default path crossing terrain) == {'mine_candidates': 3041, 'mine_already_there': 264, 'mine_default_crossing': 127}
+n 127 saving ticks: mean 25.9 median 0.0 share>=10 0.323 share>=30 0.22
+default travel ticks mean 57.3 best alt mean 31.3 chosen action when MINE crossed: [('ATTACK', 64), ('RETREAT', 28), ('FLANK', 14), ('RAID', 8), ('MINE', 6), ('ESCORT', 5), ('GUARD', 2)]
+
+== MINE arrivals (Lookahead) n=90, crossing n=3, censored 43 ==
+all: MAE straight 4.42 MAE terrain 4.96 median actual 1.5
+crossing: MAE straight 2.62 MAE terrain 18.93 mean actual 6 mean pred straight 5.7 mean pred terrain 24.9
+crossing sample: [(6.9, 30.3, 10, True), (3.4, 17.0, 0, True), (6.7, 27.5, 8, True)]

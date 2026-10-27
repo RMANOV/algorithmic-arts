@@ -1,0 +1,27 @@
+corr(LA, Opp) within epoch: -0.248; sd LA 8.34, sd Opp 8.49, sd(LA-Opp) 13.29
+deff(world) LA absolute 1.07; Opp absolute 1.25
+LA-Opp quantiles: p05 -17.9 p25 -8.4 median -0.23 p75 +9.6 p95 +22.8 | kurtosis 4.14
+10% trimmed mean +0.33
+Wilcoxon signed-rank z +0.37
+LA-Opp full-length epochs only: n=148 mean +0.322 sd 13.240 ±2.133
+
+-- arm A is already in the data: Opponent with gate closed == Utility (only branch: line 463)
+Opp - Utility (counter-table value), epochs>=2: n=180 mean +1.459 sd 12.566 ±1.836
+Opp - Utility, all closed epochs: n=240 mean +1.316 sd 14.190 ±1.795
+LA - Utility (forecast value), epochs>=2: n=180 mean +2.008 sd 13.000 ±1.899
+
+-- survival / descendants endpoints, epochs>=2 (guide: advantage = survival, descendants, command influence)
+  Lookahead  extinct  40.6%  pop_end 1.32  births 0.81  losses 3.49
+  Opponent   extinct  52.8%  pop_end 1.10  births 1.19  losses 4.09
+  Utility    extinct  40.6%  pop_end 1.24  births 1.13  losses 3.88
+  McNemar extinction LA-only 39 vs Opp-only 61: z = +2.20
+  pop_end LA-Opp: n=180 mean +0.217 sd 2.175 ±0.318
+  births LA-Opp: n=180 mean -0.389 sd 1.683 ±0.246
+  losses LA-Opp: n=180 mean -0.606 sd 1.956 ±0.286
+
+-- does score reward descendants? within-method correlations, epochs>=2
+  Lookahead  corr(score,births) -0.245  corr(score,pop_end) +0.192  corr(score,losses) -0.435
+  Opponent   corr(score,births) -0.029  corr(score,pop_end) +0.419  corr(score,losses) -0.527
+  Utility    corr(score,births) -0.323  corr(score,pop_end) +0.205  corr(score,losses) -0.489
+  Reflex     corr(score,births) -0.379  corr(score,pop_end) -0.063  corr(score,losses) -0.378
+  within-epoch OLS: score ~ -1.37*births -2.69*losses (all methods)
